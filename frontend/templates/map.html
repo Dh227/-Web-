@@ -1,0 +1,3189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <title>智能出行规划（前端示例）</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: #eef2f7;
+      color: #1f2a37
+    }
+
+    .app-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 18px 24px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px
+    }
+
+    header {
+      padding: 18px 20px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, .08);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: flex-start
+    }
+
+    .header-user-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f0f0f0;
+      padding-bottom: 8px;
+      margin-bottom: 8px
+    }
+
+    .header-user-row .user-greeting {
+      font-weight: 600;
+      color: #2c3e50
+    }
+
+    .header-user-row .user-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .header-user-row .logout-link {
+      color: #c0392b;
+      text-decoration: none;
+      font-size: 14px
+    }
+
+    input[type=text] {
+      padding: 10px 12px;
+      border: 1px solid #dce3f0;
+      border-radius: 10px;
+      width: 320px;
+      background: #f7f9fc
+    }
+
+    button {
+      padding: 10px 14px;
+      border: 1px solid #d0d7eb;
+      background: #fff;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500
+    }
+
+    button:hover {
+      filter: brightness(0.97)
+    }
+
+    button:active {
+      transform: translateY(1px)
+    }
+
+    button.loading {
+      opacity: .7;
+      pointer-events: none
+    }
+
+    button.primary {
+      background: #2d6cdf;
+      color: #fff;
+      border-color: #2d6cdf
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center
+    }
+
+    .field-card {
+      background: #f8f9fd;
+      border: 1px solid #e4e8f7;
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 260px
+    }
+
+    .field-card .muted {
+      font-size: 12px
+    }
+
+    .location-input {
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .location-input input {
+      flex: 1
+    }
+
+    .location-input button {
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: #e7edff;
+      border-color: #d0dbff;
+      color: #2d3a8c
+    }
+
+    .soft-label {
+      font-size: 12px;
+      color: #7a889f
+    }
+
+    .pill {
+      display: inline-block;
+      border: 1px solid #ddd;
+      border-radius: 999px;
+      padding: 6px 10px;
+      margin-right: 6px;
+      cursor: pointer
+    }
+
+    .pill input {
+      margin-right: 4px
+    }
+
+    .pill.active {
+      background: #2d6cdf;
+      color: #fff;
+      border-color: #2d6cdf
+    }
+
+    #map {
+      width: 100%;
+      height: 62vh;
+      border-radius: 18px;
+      box-shadow: 0 18px 35px rgba(15, 23, 42, .15);
+      overflow: hidden
+    }
+
+    #panel {
+      padding: 16px 18px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, .08);
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    #stats {
+      color: #333
+    }
+
+    .legend {
+      display: flex;
+      gap: 10px;
+      align-items: center
+    }
+
+    .legend .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%
+    }
+
+    .dot.drive {
+      background: #2d6cdf
+    }
+
+    .dot.walk {
+      background: #27ae60
+    }
+
+    .dot.bike {
+      background: #e67e22
+    }
+
+    .dot.ebike {
+      background: #8e44ad
+    }
+
+    .dot.transit {
+      background: #7f8c8d
+    }
+
+    .poi-item {
+      padding: 8px;
+      border: 1px solid #f1f1f1;
+      border-radius: 8px;
+      margin-top: 6px
+    }
+
+    .muted {
+      color: #888;
+      font-size: 12px
+    }
+
+    .badge {
+      display: inline-block;
+      background: #f5f7ff;
+      border: 1px solid #e2e8ff;
+      border-radius: 6px;
+      padding: 2px 6px;
+      margin-left: 4px
+    }
+
+    .tag {
+      display: inline-block;
+      background: #f1f1f1;
+      border-radius: 6px;
+      padding: 1px 6px;
+      margin-left: 6px;
+      font-size: 12px
+    }
+
+    .small {
+      font-size: 12px
+    }
+
+    #toolDrawer {
+      position: fixed;
+      top: 90px;
+      left: 24px;
+      width: 400px;
+      bottom: 36px;
+      background: #fdfdff;
+      border-radius: 18px;
+      box-shadow: 0 22px 48px rgba(15, 23, 42, .25);
+      z-index: 950;
+      display: flex;
+      flex-direction: column;
+      transition: transform .4s cubic-bezier(.4, 0, .2, 1);
+      will-change: transform;
+    }
+
+    #toolDrawer.closed {
+      transform: translateX(calc(-100% + 48px));
+    }
+
+    #toolDrawer.open {
+      transform: translateX(0);
+    }
+
+    #drawerHandle {
+      position: absolute;
+      right: -48px;
+      top: 72px;
+      width: 48px;
+      height: 96px;
+      background: #2d6cdf;
+      color: #fff;
+      border-radius: 0 18px 18px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, .35);
+      transition: right .3s ease, transform .3s ease;
+    }
+
+    #toolDrawer.open #drawerHandle {
+      right: -16px;
+    }
+
+    #drawerHandle:hover {
+      transform: translateX(2px);
+    }
+
+    .drawer-nav {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      padding: 16px;
+      border-bottom: 1px solid #edf1ff;
+    }
+
+    .drawer-nav button {
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #edf1ff;
+      color: #5b678a;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .drawer-nav button.active {
+      background: #2d6cdf;
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(45, 108, 223, .35);
+    }
+
+    .drawer-content {
+      flex: 1;
+      overflow: auto;
+      padding: 16px;
+      display: flex;
+    }
+
+    .tool-panel {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .tool-panel.active {
+      display: flex;
+    }
+
+    #kimiAns {
+      max-height: 220px;
+      overflow: auto;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 6px;
+      background: #fafafa
+    }
+
+    .chat-box {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 6px;
+      max-height: 180px;
+      overflow: auto;
+      background: #fafafa;
+      margin-top: 6px
+    }
+
+    .chat-msg {
+      margin-bottom: 6px
+    }
+
+    .chat-msg.me {
+      color: #2d6cdf
+    }
+
+    .chat-msg.ai {
+      color: #2c3e50
+    }
+
+    .summary-list {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 6px;
+      background: #fcfcfc;
+      margin-top: 6px
+    }
+
+    .explain-item {
+      border-bottom: 1px dashed #eee;
+      padding: 6px 0;
+    }
+
+    .explain-item:last-child {
+      border-bottom: none;
+    }
+
+    .explain-item b {
+      color: #2d6cdf;
+    }
+
+    .user-panel {
+      position: fixed;
+      top: 120px;
+      right: 40px;
+      width: 320px;
+      max-height: calc(100vh - 160px);
+      background: #fff;
+      border: 1px solid #e4e8ff;
+      border-radius: 12px;
+      box-shadow: 0 14px 38px rgba(0, 0, 0, .18);
+      padding: 14px;
+      display: none;
+      flex-direction: column;
+      z-index: 1200
+    }
+
+    .user-panel.open {
+      display: flex;
+    }
+
+    .user-panel__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px
+    }
+
+    .user-panel__header button {
+      border: none;
+      background: transparent;
+      font-size: 18px;
+      cursor: pointer;
+      color: #555
+    }
+
+    .user-panel__search {
+      margin-bottom: 10px
+    }
+
+    .user-panel__search input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #dfe4f7;
+      border-radius: 6px;
+      box-sizing: border-box
+    }
+
+    .user-panel__body {
+      overflow: auto;
+      flex: 1;
+    }
+
+    .user-card {
+      border: 1px solid #f0f0f0;
+      border-radius: 8px;
+      padding: 8px;
+      margin-bottom: 8px;
+      background: #fafafa
+    }
+
+    .user-card__title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #2c3e50
+    }
+
+    .user-card__meta {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 2px
+    }
+
+    .user-card__meta:last-child {
+      margin-bottom: 0
+    }
+
+    #modeWarning {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, .05)
+    }
+
+    .location-input input.loading {
+      background: #fff3dc
+    }
+
+    .panel-section {
+      background: #f7f8fd;
+      border: 1px solid #e4e8f6;
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1f2a37
+    }
+
+    .field-label {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 4px;
+      display: block
+    }
+
+    .panel-input,
+    .panel-select,
+    .panel-textarea {
+      width: 100%;
+      padding: 9px 11px;
+      border: 1px solid #dfe4f7;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 14px;
+      box-sizing: border-box
+    }
+
+    .panel-textarea {
+      min-height: 72px;
+      resize: vertical
+    }
+
+    .panel-select {
+      appearance: none;
+      background: #fff url('data:image/svg+xml;utf8,<svg fill=\"%2354679a\" height=\"12\" width=\"12\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M2 4l4 4 4-4z\"/></svg>') no-repeat right 10px center;
+      background-size: 12px 12px;
+      padding-right: 28px
+    }
+
+    .panel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px
+    }
+
+    .panel-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px
+    }
+
+    .panel-result {
+      border: 1px dashed #dfe4f7;
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+      max-height: 220px;
+      overflow: auto;
+      font-size: 13px;
+      color: #4b5565
+    }
+
+    .tempo-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .tempo-buttons button {
+      flex: 1;
+      min-width: 80px
+    }
+
+    /* 强制定位按钮在右侧，防止遮挡左侧功能栏 */
+    .amap-geolocation-con,
+    .amap-geo {
+      left: auto !important;
+      right: 20px !important;
+      top: 20px !important;
+      bottom: auto !important;
+    }
+  </style>
+  <!-- 高德 JS API Loader（v2 兼容 1.x） -->
+  <script src="https://webapi.amap.com/loader.js"></script>
+</head>
+
+<body>
+  <div class="app-container">
+    <header>
+      <div class="header-user-row">
+        <div class="user-greeting">欢迎使用智能出行规划系统</div>
+        <div class="user-actions">
+          <button type="button" class="primary" onclick="toggleUserPanel()">用户管理</button>
+          <a class="logout-link" href="/logout">退出登录</a>
+        </div>
+      </div>
+      <div class="row" style="width:100%;gap:16px;">
+        <div class="field-card">
+          <div class="soft-label">起点地点</div>
+          <div class="location-input">
+            <input id="originAddress" type="text" placeholder="例如：天安门广场" value="天安门广场">
+            <button type="button" onclick="geocodeAddress('origin', { autoPlan: true })">定位</button>
+            <button type="button" class="primary" onclick="confirmLocation('origin')">确定</button>
+          </div>
+          <div class="soft-label">可输入地点或在地图上点击选择起点</div>
+          <input id="origin" type="hidden" value="116.397085,39.920158">
+        </div>
+        <div class="field-card">
+          <div class="soft-label">终点地点</div>
+          <div class="location-input">
+            <input id="destinationAddress" type="text" placeholder="例如：北京南站" value="北京南站">
+            <button type="button" onclick="geocodeAddress('destination', { autoPlan: true })">定位</button>
+            <button type="button" class="primary" onclick="confirmLocation('destination')">确定</button>
+          </div>
+          <div class="soft-label">输入地名或使用地图点击设定终点</div>
+          <input id="destination" type="hidden" value="116.426954,39.904358">
+        </div>
+        <div class="field-card" style="flex:1 1 260px">
+          <div class="soft-label">路线操作</div>
+          <div class="row">
+            <button class="primary" onclick="onDrawDriving(event)">绘制驾车路线</button>
+            <button onclick="onClearRoute()">清空路线</button>
+            <button onclick="onClearMarkers()">清空标记</button>
+          </div>
+          <div class="soft-label">（在地图上：第1次点击=起点，第2次=终点，其后=途经点）</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <span class="small muted">策略（<span id="strategyCount">—</span>）</span>
+        <label class="pill"><input type="radio" name="strategy" value="32" checked />推荐</label>
+        <label class="pill"><input type="radio" name="strategy" value="33" />躲避拥堵</label>
+        <label class="pill"><input type="radio" name="strategy" value="35" />不走高速</label>
+        <label class="pill"><input type="radio" name="strategy" value="36" />少收费</label>
+        <label class="pill"><input type="radio" name="strategy" value="39" />最快</label>
+        <label class="pill"><input type="radio" name="strategy" value="40" />拥堵+不走高速</label>
+      </div>
+
+      <div class="row">
+        <span class="small muted">车辆：</span>
+        <label class="pill"><input type="radio" name="cartype" value="0" checked />燃油</label>
+        <label class="pill"><input type="radio" name="cartype" value="1" />纯电</label>
+        <label class="pill"><input type="radio" name="cartype" value="2" />插混</label>
+        <div style="display:flex;flex-direction:column;">
+          <span class="small muted">车牌（限行规避）</span>
+          <input id="plateNumber" type="text" placeholder="京A12345" style="width:140px;">
+        </div>
+
+        <div class="row">
+          <button onclick="onDrawWalking(event)">步行</button>
+          <button onclick="onDrawBicycling(event)">骑行</button>
+          <button onclick="onDrawEbike(event)">电动车</button>
+          <button onclick="onDrawTransit(event)">公交</button>
+        </div>
+      </div>
+      <div class="row">
+        <button id="subwayBtn" onclick="toggleSubwayLayer()">显示地铁图</button>
+        <button onclick="onLocateUser()">定位到我</button>
+      </div>
+    </header>
+    <div id="userPanel" class="user-panel">
+      <div class="user-panel__header">
+        <strong>用户管理<span class="muted small">（<span id="userCount">0</span> 人）</span></strong>
+        <button type="button" onclick="toggleUserPanel(false)">×</button>
+      </div>
+      <div class="user-panel__search">
+        <input id="userSearch" type="text" placeholder="按用户名/电话/邮箱搜索">
+      </div>
+      <div class="user-panel__body" id="userList">
+        <div class="muted small">暂无用户</div>
+      </div>
+    </div>
+
+
+
+    <div id="map"></div>
+
+    <div id="panel">
+      <div id="wayInfo" class="small muted">途经点：<span id="wpCount">0</span> 个</div>
+      <div id="stats"></div>
+      <div id="segmentsBox" class="small" style="max-width:60vw"></div>
+      <div class="legend small">
+        <span class="dot drive"></span>驾车
+        <span class="dot walk"></span>步行
+        <span class="dot bike"></span>骑行
+        <span class="dot ebike"></span>电动车
+        <span class="dot transit"></span>公交
+      </div>
+      <div id="modeTag" class="badge">—</div>
+    </div>
+    <div id="modeWarning" class="small" style="padding:6px 12px;color:#c0392b;min-height:20px;"></div>
+
+    <div id="toolDrawer" class="open">
+      <div id="drawerHandle">›</div>
+      <div class="drawer-nav">
+        <button class="active" data-panel="poiPanel">POI</button>
+        <button data-panel="kimiPanelTab">Kimi</button>
+        <button data-panel="agentPanelTab">访谈</button>
+        <button data-panel="plannerPanelTab">行程</button>
+        <button data-panel="weatherPanel">天气</button>
+        <button data-panel="explainPanel">说明</button>
+      </div>
+      <div class="drawer-content">
+        <div id="poiPanel" class="tool-panel active">
+          <div class="panel-section">
+            <div class="section-title">景点/POI 搜索</div>
+            <div>
+              <label class="field-label" for="kw">关键词</label>
+              <input id="kw" class="panel-input" type="text" placeholder="如：景点 / 博物馆 / 长城…">
+            </div>
+            <div class="panel-grid">
+              <div>
+                <label class="field-label" for="citycode">城市 / citycode</label>
+                <input id="citycode" class="panel-input" type="text" placeholder="如：北京 或 010">
+              </div>
+              <div class="panel-actions" style="align-items:flex-end;">
+                <button class="primary" onclick="onSearchPOI()">搜索</button>
+                <button
+                  onclick="document.getElementById('kw').value='';document.getElementById('citycode').value='';document.getElementById('poiList').innerHTML='';">清空</button>
+              </div>
+            </div>
+            <div id="poiList" class="panel-result" style="min-height:80px;">
+              <span class="muted">输入关键词后点击搜索，显示前 10 条高德 POI。</span>
+            </div>
+          </div>
+          <div class="panel-section">
+            <div class="section-title">POI 召回 / 排序 Agent</div>
+            <div class="panel-grid">
+              <div>
+                <label class="field-label" for="poiAgentCity">城市</label>
+                <input id="poiAgentCity" class="panel-input" type="text" placeholder="如：北京 或 010">
+              </div>
+              <div>
+                <label class="field-label" for="poiAgentTheme">主题</label>
+                <input id="poiAgentTheme" class="panel-input" type="text" placeholder="如：艺术馆 / 亲子">
+              </div>
+            </div>
+            <label class="field-label" for="poiAgentKeywords">附加关键词（可选）</label>
+            <input id="poiAgentKeywords" class="panel-input" type="text" placeholder="可与主题不同，如：夜生活">
+            <label class="field-label" for="poiAgentProfile">用户画像 / 偏好</label>
+            <textarea id="poiAgentProfile" class="panel-textarea" placeholder="如：两人周末小旅行，喜欢人少的文艺路线"></textarea>
+            <div>
+              <label class="field-label" for="poiAgentPriority">排序偏好</label>
+              <select id="poiAgentPriority" class="panel-select">
+                <option value="balanced">综合（口碑 + 热度）</option>
+                <option value="quality">口碑优先</option>
+                <option value="hot">热度优先</option>
+              </select>
+            </div>
+            <div class="panel-actions">
+              <button class="primary" onclick="onPoiAgentRecall()">智能推荐</button>
+              <button
+                onclick="document.getElementById('poiAgentCity').value='';document.getElementById('poiAgentTheme').value='';document.getElementById('poiAgentKeywords').value='';document.getElementById('poiAgentProfile').value='';">清空偏好</button>
+            </div>
+            <div id="poiAgentResult" class="panel-result">
+              <span class="muted">结合城市 + 主题 + 偏好，自动召回/排序推荐</span>
+            </div>
+          </div>
+        </div>
+        <div id="kimiPanelTab" class="tool-panel">
+          <div class="panel-section">
+            <div class="section-title">AI 助手（Kimi）</div>
+            <p class="small muted">向 Kimi 询问出行建议、路线比较等，回答会结合当前起终点。</p>
+            <textarea id="kimiAsk" class="panel-textarea" rows="4" placeholder="例如：比较步行和骑行时间；或推荐沿途景点"></textarea>
+            <div class="panel-actions">
+              <button class="primary" onclick="onAskKimi(event)">询问 Kimi</button>
+              <button
+                onclick="document.getElementById('kimiAsk').value='';document.getElementById('kimiAns').innerHTML='';">清空</button>
+            </div>
+            <div id="kimiAns" class="panel-result" style="white-space:pre-wrap;min-height:80px;"></div>
+          </div>
+          <div class="panel-section">
+            <div class="section-title">沿途风景洞察</div>
+            <p class="small muted">绘制路线后自动分析沿途景点，提示推荐理由和注意事项。</p>
+            <div id="sightsList" class="panel-result">
+              绘制路线后自动分析沿途景点
+            </div>
+          </div>
+        </div>
+        <div id="agentPanelTab" class="tool-panel">
+          <div class="panel-section">
+            <div class="section-title">需求访谈 Agent</div>
+            <p class="small muted">用 AI 逐步问答抽取出行天数、预算、节奏与主题，形成个性化画像。</p>
+            <div class="panel-result" style="max-height:180px;" id="tripAgentConvo">
+              <div class="muted">点击“开始访谈”由 Agent 主动发问</div>
+            </div>
+            <textarea id="tripAgentInput" class="panel-textarea" rows="3" placeholder="输入回答，如：大概 4 天，主要逛博物馆"></textarea>
+            <div class="panel-actions">
+              <button onclick="onTripAgentStart()">开始访谈</button>
+              <button class="primary" onclick="onTripAgentSend()">发送回答</button>
+              <button onclick="resetTripAgent()">重置</button>
+            </div>
+          </div>
+          <div class="panel-section">
+            <div class="section-title">信息提炼</div>
+            <div id="tripAgentSummary" class="panel-result summary-list small">暂无</div>
+            <div id="tripAgentFinal" class="panel-result small" style="white-space:pre-wrap;">AI 总结待生成</div>
+            <div class="panel-actions">
+              <button class="primary" onclick="applyTripSummaryToPlanner()">应用到行程</button>
+            </div>
+          </div>
+        </div>
+        <div id="plannerPanelTab" class="tool-panel">
+          <div class="panel-section">
+            <div class="section-title">行程排布 / 约束求解器</div>
+            <p class="small muted">将 POI 开放时间、停留时长、交通与休息约束统一求解，快速生成方案。</p>
+            <div class="panel-grid">
+              <div>
+                <label class="field-label" for="plannerStart">出发时间</label>
+                <input id="plannerStart" class="panel-input" type="time" value="08:30">
+              </div>
+              <div>
+                <label class="field-label" for="plannerEnd">结束时间</label>
+                <input id="plannerEnd" class="panel-input" type="time" value="21:00">
+              </div>
+              <div>
+                <label class="field-label" for="plannerStartLoc">起点（名称或坐标）</label>
+                <input id="plannerStartLoc" class="panel-input" type="text" placeholder="如：天安门/北京站/116.397463,39.909187">
+                <div id="plannerStartHint" class="small muted"></div>
+              </div>
+              <div>
+                <label class="field-label" for="plannerBudget">预算上限 (¥)</label>
+                <input id="plannerBudget" class="panel-input" type="number" placeholder="如 800">
+              </div>
+              <div>
+                <label class="field-label" for="plannerSpeed">平均交通速度 (km/h)</label>
+                <input id="plannerSpeed" class="panel-input" type="number" value="28">
+              </div>
+              <div>
+                <label class="field-label" for="plannerBreakRange">餐饮/休息时窗</label>
+                <input id="plannerBreakRange" class="panel-input" type="text" value="12:00-13:30">
+              </div>
+              <div>
+                <label class="field-label" for="plannerBreakDuration">休息时长 (分钟)</label>
+                <input id="plannerBreakDuration" class="panel-input" type="number" value="60">
+              </div>
+            </div>
+          </div>
+          <div class="panel-section">
+            <div class="section-title">POI 清单</div>
+            <p class="small muted">每行格式：名称 | 坐标 | 开放时段 | 停留分钟 | 费用 | 优先级 1-5。</p>
+            <textarea id="plannerPOIs" class="panel-textarea" rows="6" placeholder="故宫 | 116.397,39.918 | 08:30-17:00 | 120 | 80 | 5
+国家博物馆 | 116.407,39.903 | 09:00-17:00 | 90 | 0 | 4
+三里屯 | 116.455,39.939 | 10:00-22:00 | 90 | 200 | 3"></textarea>
+            <div class="panel-grid">
+              <div>
+                <label class="field-label">快速添加</label>
+                <input id="plannerNewName" class="panel-input" type="text" placeholder="名称，如：XX博物馆">
+              </div>
+              <div>
+                <label class="field-label">坐标 (可空)</label>
+                <input id="plannerNewLoc" class="panel-input" type="text" placeholder="116.397,39.918">
+              </div>
+              <div>
+                <label class="field-label">开放时段</label>
+                <input id="plannerNewTime" class="panel-input" type="text" placeholder="09:00-17:00">
+              </div>
+              <div>
+                <label class="field-label">停留分钟</label>
+                <input id="plannerNewStay" class="panel-input" type="number" placeholder="90">
+              </div>
+              <div>
+                <label class="field-label">费用</label>
+                <input id="plannerNewCost" class="panel-input" type="number" placeholder="0">
+              </div>
+              <div>
+                <label class="field-label">优先级 1-5</label>
+                <input id="plannerNewPri" class="panel-input" type="number" min="1" max="5" placeholder="3">
+              </div>
+            </div>
+            <div class="panel-actions">
+              <button onclick="prefillNewPoiLocation()">用地图终点坐标</button>
+              <button class="primary" onclick="appendPlannerPoi()">添加到列表</button>
+              <button onclick="clearPlannerNewPoi()">清空输入</button>
+            </div>
+            <div>
+              <label class="field-label">POI 调整</label>
+              <div id="plannerPoiActions" class="panel-result">
+                <span class="muted">解析 POI 后可锁定 / 排除 / 换景点</span>
+              </div>
+            </div>
+          </div>
+            <div class="panel-section">
+              <div class="section-title">节奏与求解</div>
+              <div class="tempo-buttons" id="plannerTempoGroup">
+                <button type="button" data-tempo="relax" onclick="setPlannerTempo('relax')">悠闲</button>
+                <button type="button" data-tempo="normal" class="active" onclick="setPlannerTempo('normal')">均衡</button>
+                <button type="button" data-tempo="rush" onclick="setPlannerTempo('rush')">紧凑</button>
+              </div>
+              <label class="small" style="display:flex;align-items:center;gap:6px;">
+                <input type="checkbox" id="plannerEnforceOrder">
+                按列表顺序安排行程（不会自动重排顺路）
+              </label>
+              <div class="panel-actions">
+                <button class="primary" onclick="onSolveItinerary()">求解行程</button>
+                <button onclick="applyPlanToMap()">绘制到地图</button>
+                <button onclick="document.getElementById('plannerPOIs').value='';">清空列表</button>
+              </div>
+            <div id="plannerResult" class="panel-result">
+              <span class="muted">填写约束后点击“求解行程”查看排布结果。</span>
+            </div>
+          </div>
+        </div>
+        <div id="weatherPanel" class="tool-panel">
+          <div class="panel-section">
+            <div class="section-title">行程天气预报</div>
+            <p class="small muted">基于您的行程日期和地点，预测未来天气情况。</p>
+            <div id="weatherResult" class="panel-result" style="min-height:120px;">
+              <span class="muted">正在获取天气数据...</span>
+            </div>
+            <div class="panel-actions">
+              <button class="primary" onclick="refreshWeather()">刷新天气</button>
+            </div>
+          </div>
+        </div>
+        <div id="explainPanel" class="tool-panel">
+          <div class="panel-section">
+            <div class="section-title">可解释说明器</div>
+            <p class="small muted">记录每次路线调整的原因、收益与规避信息，敏捷复盘并做决策支撑。</p>
+            <div id="explainList" class="panel-result">
+              <span class="muted">暂未生成说明，绘制路线后自动记录。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========= 配置 =========
+    const AMAP_JS_KEY = "9ea00d55a89ea92edcd028343bec05ed"; // 你的 Web(JS) Key
+    const BASE_URL = "http://127.0.0.1:8000";                 // 你的后端地址
+    const STRATEGY_LABELS = {
+      "32": "推荐",
+      "33": "躲避拥堵",
+      "35": "不走高速",
+      "36": "少收费",
+      "39": "最快",
+      "40": "拥堵+不走高速"
+    };
+
+    // ========= 地图与图层 =========
+    let map, startMarker, endMarker;
+    let waypointMarkers = [];
+    let currentPolyline = null;
+    let currentMode = "drive"; // drive | walk | bike | ebike | transit
+    let lastRouteMeta = null;
+    let lastPolylineStrings = [];
+    let lastSightsResponse = null;
+    let sightsReqToken = 0;
+    let approxDistanceKm = null;
+    let subwayLayer = null;
+    let subwayVisible = false;
+    let geolocationCtrl = null;
+    let myLocationMarker = null;
+    let geocoder = null;
+    let placeSearch = null;
+    const autoCompleteRefs = {};
+    let tripAgentHistory = [];
+    let tripAgentSummary = null;
+    let tripAgentLastAnswer = "";
+    let tripAgentLoading = false;
+    const TRIP_AGENT_SLOT_LABELS = {
+      trip_days: "出行天数",
+      budget: "预算",
+      pace: "节奏偏好",
+      themes: "主题偏好",
+      depart_window: "出发时窗",
+      return_window: "返程时窗",
+      traveler_profile: "同行人/画像",
+      notes: "其他备注"
+    };
+    let explanationLogs = [];
+    let lastDrivingInsight = null;
+    let plannerStartResolved = null;
+    let plannerStartLabel = "";
+    const plannerState = {
+      locked: new Set(),
+      excluded: new Set(),
+      replacements: {},
+      tempo: "normal"
+    };
+    let latestPlannerPOIs = [];
+    let lastItineraryResult = null;
+    let autoSolveTimer = null;
+    let weatherRefreshTimer = null;
+
+    // 记录：点击顺序（起点、终点、途经点…）
+    let clicks = 0;
+    let waypoints = []; // ["lng,lat", ...]
+    const MODE_LIMITS_KM = {
+      walking: 80,
+      bicycling: 200,
+      electrobike: 250,
+      transit: 1500
+    };
+    const MODE_NAMES = {
+      walking: "步行",
+      bicycling: "骑行",
+      electrobike: "电动车",
+      transit: "公交"
+    };
+    const ADVANCED_DRIVING_STRATEGIES = new Set(["33", "35", "36", "39", "40"]);
+    const ADVANCED_STRATEGY_LIMIT_KM = 1200;
+
+    function parseLngLatValue(str) {
+      if (!str) return null;
+      const arr = str.split(",").map(Number);
+      if (arr.length !== 2 || arr.some(isNaN)) {
+        return null;
+      }
+      return arr;
+    }
+    function calcDistanceKmBetween(a, b) {
+      const [lng1, lat1] = a;
+      const [lng2, lat2] = b;
+      const R = 6371000;
+      const phi1 = lat1 * Math.PI / 180;
+      const phi2 = lat2 * Math.PI / 180;
+      const dphi = (lat2 - lat1) * Math.PI / 180;
+      const dlmb = (lng2 - lng1) * Math.PI / 180;
+      const t = Math.sin(dphi / 2) ** 2 + Math.cos(phi1) * Math.cos(phi2) * Math.sin(dlmb / 2) ** 2;
+      return (2 * R * Math.asin(Math.min(1, Math.sqrt(t)))) / 1000;
+    }
+    function refreshDistanceState() {
+      const origin = document.getElementById("origin")?.value.trim() || "";
+      const destination = document.getElementById("destination")?.value.trim() || "";
+      const o = parseLngLatValue(origin);
+      const d = parseLngLatValue(destination);
+      if (!o || !d) {
+        approxDistanceKm = null;
+        renderDistanceWarning();
+        return;
+      }
+      approxDistanceKm = Number(calcDistanceKmBetween(o, d).toFixed(1));
+      renderDistanceWarning();
+    }
+    function renderDistanceWarning() {
+      const el = document.getElementById("modeWarning");
+      if (!el) return;
+      if (approxDistanceKm == null) {
+        el.textContent = "输入起终点后可查看距离及可用策略提示。";
+        el.style.color = "#888";
+        return;
+      }
+      const warns = [];
+      if (approxDistanceKm > MODE_LIMIT_KM("walking")) {
+        warns.push("步行/骑行/电动车建议拆分线路");
+      }
+      if (approxDistanceKm > MODE_LIMIT_KM("transit")) {
+        warns.push("超长距离公交可能无法规划");
+      }
+      if (approxDistanceKm > ADVANCED_STRATEGY_LIMIT_KM) {
+        warns.push("高级驾车策略（躲避拥堵/不走高速等）会被限制");
+      }
+      if (!warns.length) {
+        el.innerHTML = `<span class="muted">直线距离约 ${approxDistanceKm.toFixed(1)} km，全部功能可正常尝试。</span>`;
+        el.style.color = "#2c3e50";
+      } else {
+        el.innerHTML = `直线距离约 <b>${approxDistanceKm.toFixed(1)} km</b>。${warns.join("；")}。`;
+        el.style.color = "#c0392b";
+      }
+    }
+    function MODE_LIMIT_KM(mode) {
+      return MODE_LIMITS_KM[mode] || Infinity;
+    }
+    function ensureModeAllowed(mode) {
+      const limit = MODE_LIMIT_KM(mode);
+      if (limit === Infinity || approxDistanceKm == null) return true;
+      if (approxDistanceKm <= limit) return true;
+      alert(`当前直线距离约 ${approxDistanceKm.toFixed(1)} km，${MODE_NAMES[mode] || mode}模式在超长距离上会被高德拒绝，请拆分路线或改用驾车。`);
+      return false;
+    }
+    function ensureDrivingStrategyAllowed() {
+      if (approxDistanceKm == null || approxDistanceKm <= ADVANCED_STRATEGY_LIMIT_KM) return true;
+      const strategy = String(getCurrentStrategy());
+      if (!ADVANCED_DRIVING_STRATEGIES.has(strategy)) return true;
+      alert(`当前路线约 ${approxDistanceKm.toFixed(1)} km，高德会默认降级高级策略。建议切换为“推荐(32)”后再试，或拆分路线。`);
+      return false;
+    }
+    function appendTripAgentMessage(role, text) {
+      const box = document.getElementById("tripAgentConvo");
+      if (!box) return;
+      const div = document.createElement("div");
+      div.className = `chat-msg ${role}`;
+      div.innerText = text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function renderTripAgentSummary(slots) {
+      const box = document.getElementById("tripAgentSummary");
+      if (!box) return;
+      if (!slots) {
+        box.innerHTML = "<span class='muted'>等待 Agent 识别关键信息…</span>";
+        return;
+      }
+      const items = [];
+      Object.keys(TRIP_AGENT_SLOT_LABELS).forEach(key => {
+        let val = slots[key];
+        if (Array.isArray(val)) {
+          val = val.filter(Boolean).join("、");
+        }
+        if (typeof val === "number") {
+          val = String(val);
+        }
+        if (!val) {
+          val = "<span class='muted'>未提供</span>";
+        } else {
+          val = val.replace(/\n+/g, " ");
+        }
+        items.push(`<div><b>${TRIP_AGENT_SLOT_LABELS[key]}</b>：${val}</div>`);
+      });
+      box.innerHTML = items.join("");
+    }
+    function renderTripAgentFinal() {
+      const box = document.getElementById("tripAgentFinal");
+      if (!box) return;
+      box.textContent = tripAgentLastAnswer ? tripAgentLastAnswer : "AI 总结待生成";
+    }
+    function parseBudgetFromText(text) {
+      if (!text) return null;
+      const match = String(text).match(/(\d+(\.\d+)?)/);
+      if (!match) return null;
+      return Number(match[1]);
+    }
+    function parseTempoFromText(text) {
+      if (!text) return null;
+      const t = text.toLowerCase();
+      if (t.includes("悠") || t.includes("慢") || t.includes("松")) return "relax";
+      if (t.includes("紧") || t.includes("快") || t.includes("赶") || t.includes("充实")) return "rush";
+      return "normal";
+    }
+    function parseBudgetFromText(text) {
+      if (!text) return null;
+      const match = String(text).match(/(\d+(\.\d+)?)/);
+      if (!match) return null;
+      return Number(match[1]);
+    }
+    function parseTempoFromText(text) {
+      if (!text) return null;
+      const t = text.toLowerCase();
+      if (t.includes("悠") || t.includes("慢") || t.includes("松")) return "relax";
+      if (t.includes("紧") || t.includes("快") || t.includes("赶") || t.includes("充实")) return "rush";
+      return "normal";
+    }
+    function updateStrategyCount(count) {
+      const el = document.getElementById("strategyCount");
+      if (!el) return;
+      if (count == null || isNaN(count)) {
+        el.textContent = "—";
+      } else {
+        el.textContent = count;
+      }
+    }
+    function getStrategyLabelText() {
+      const key = String(getCurrentStrategy());
+      return STRATEGY_LABELS[key] || `策略 ${key}`;
+    }
+    function addExplanationLog(entry) {
+      explanationLogs.unshift(entry);
+      if (explanationLogs.length > 20) explanationLogs.pop();
+      const box = document.getElementById("explainList");
+      if (!box) return;
+      if (!explanationLogs.length) {
+        box.innerHTML = "<span class='muted'>暂未生成说明</span>";
+        return;
+      }
+      box.innerHTML = explanationLogs.map(item => `
+        <div class="explain-item">
+          <div><b>${item.time}</b> ｜ ${item.strategy}</div>
+          <div class="small">${item.text}</div>
+        </div>
+      `).join("");
+    }
+    function logDrivingExplanation(json) {
+      if (!json || json.status !== "1" || !json.route || !json.route.paths || !json.route.paths.length) {
+        return;
+      }
+      const path = json.route.paths[0];
+      if (!path) return;
+      const durSec = path.cost && path.cost.duration ? Number(path.cost.duration) : NaN;
+      const durationMin = isNaN(durSec) ? null : Math.round(durSec / 60);
+      const dist = path.distance ? Number(path.distance) : NaN;
+      const distanceKm = isNaN(dist) ? null : Number((dist / 1000).toFixed(1));
+      const tolls = path.tolls !== undefined ? Number(path.tolls) : null;
+      const lights = path.traffic_lights !== undefined ? Number(path.traffic_lights) : null;
+      const firstRoad = path.steps && path.steps.length && path.steps[0].road ? path.steps[0].road : null;
+      const plate = getCurrentPlate();
+      const strategyLabel = getStrategyLabelText();
+      const prev = lastDrivingInsight;
+      const parts = [];
+      if (firstRoad) {
+        parts.push(`此段优先走 ${firstRoad}`);
+      }
+      if (durationMin != null) {
+        if (prev && prev.durationMin != null) {
+          const delta = prev.durationMin - durationMin;
+          if (delta > 2) {
+            parts.push(`预估可节省 ${delta} 分钟`);
+          } else if (delta < -2) {
+            parts.push(`预计慢 ${Math.abs(delta)} 分钟以换取更稳定路线`);
+          } else {
+            parts.push(`预计耗时 ${durationMin} 分钟`);
+          }
+        } else {
+          parts.push(`预计耗时 ${durationMin} 分钟`);
+        }
+      }
+      if (distanceKm != null) {
+        parts.push(`里程约 ${distanceKm} km`);
+      }
+      if (prev && lights != null && prev.lights != null) {
+        const deltaLights = prev.lights - lights;
+        if (deltaLights > 0) {
+          parts.push(`红绿灯减少 ${deltaLights} 个`);
+        } else if (deltaLights < 0) {
+          parts.push(`红绿灯增加 ${Math.abs(deltaLights)} 个`);
+        }
+      } else if (lights != null) {
+        parts.push(`红绿灯约 ${lights} 个`);
+      }
+      if (tolls != null) {
+        parts.push(`收费约 ${tolls} 元`);
+      }
+      if (plate) {
+        parts.push(`已依据车牌 ${plate} 自动规避限行`);
+      }
+      if (!parts.length) {
+        parts.push("路线已更新");
+      }
+      addExplanationLog({
+        time: new Date().toLocaleTimeString(),
+        strategy: strategyLabel,
+        text: parts.join("，")
+      });
+      lastDrivingInsight = {
+        durationMin,
+        distanceKm,
+        lights,
+        tolls,
+        plate,
+        strategyLabel
+      };
+    }
+
+    function renderPlannerActions(list) {
+      const box = document.getElementById("plannerPoiActions");
+      if (!box) return;
+      const pois = list || latestPlannerPOIs || [];
+      if (!pois.length) {
+        box.innerHTML = "<span class='muted'>暂无 POI，请先填写上方列表</span>";
+        return;
+      }
+      const namesSet = new Set(pois.map(p => p.name));
+      Array.from(plannerState.locked).forEach(name => { if (!namesSet.has(name)) plannerState.locked.delete(name); });
+      Array.from(plannerState.excluded).forEach(name => { if (!namesSet.has(name)) plannerState.excluded.delete(name); });
+      Object.keys(plannerState.replacements).forEach(name => { if (!namesSet.has(name)) delete plannerState.replacements[name]; });
+      const rows = pois.map(p => {
+        const name = p.name || "未命名";
+        const enc = encodeURIComponent(name);
+        const locked = plannerState.locked.has(name);
+        const excluded = plannerState.excluded.has(name);
+        const replaced = plannerState.replacements[name];
+        const status = [
+          locked ? "已锁定" : "",
+          excluded ? "已排除" : "",
+          replaced ? "已换景点" : ""
+        ].filter(Boolean).join(" / ") || "可调整";
+        return `<div class="poi-item small">
+          <div><b>${name}</b> <span class="muted">${status}</span></div>
+          <div class="row" style="margin-top:4px;">
+            <button type="button" onclick="toggleLockPoi('${enc}')">${locked ? "解锁" : "锁定"}</button>
+            <button type="button" onclick="toggleExcludePoi('${enc}')">${excluded ? "恢复" : "排除"}</button>
+            <button type="button" onclick="promptSwapPoi('${enc}')">${replaced ? "改其他" : "换景点"}</button>
+            <button type="button" style="color:#c0392b;" onclick="deletePlannerPoi('${enc}')">删除</button>
+          </div>
+        </div>`;
+      }).join("");
+      box.innerHTML = rows;
+    }
+
+    function toggleLockPoi(encoded) {
+      const name = decodeURIComponent(encoded);
+      if (!name) return;
+      if (plannerState.locked.has(name)) {
+        plannerState.locked.delete(name);
+      } else {
+        plannerState.locked.add(name);
+        plannerState.excluded.delete(name);
+      }
+      renderPlannerActions();
+      autoSolveItinerary();
+    }
+
+    function toggleExcludePoi(encoded) {
+      const name = decodeURIComponent(encoded);
+      if (!name) return;
+      if (plannerState.excluded.has(name)) {
+        plannerState.excluded.delete(name);
+      } else {
+        plannerState.excluded.add(name);
+        plannerState.locked.delete(name);
+      }
+      renderPlannerActions();
+      autoSolveItinerary();
+    }
+
+    function promptSwapPoi(encoded) {
+      const name = decodeURIComponent(encoded);
+      if (!name) return;
+      const line = prompt(`输入新的景点（格式：名称 | 坐标 | 开放时段 | 停留分钟 | 费用 | 优先级）。留空则取消替换。`, `${name} |  |  | 60 | 0 | 3`);
+      if (line === null) return;
+      if (!line.trim()) {
+        delete plannerState.replacements[name];
+        renderPlannerActions();
+        autoSolveItinerary();
+        return;
+      }
+      const parsed = parseSinglePoiLine(line.trim());
+      if (!parsed) {
+        alert("解析失败，请按示例格式填写");
+        return;
+      }
+      plannerState.replacements[name] = parsed;
+      plannerState.excluded.delete(name);
+      renderPlannerActions();
+      autoSolveItinerary();
+    }
+
+    function setPlannerTempo(mode, silent = false) {
+      if (!["relax", "normal", "rush"].includes(mode)) mode = "normal";
+      plannerState.tempo = mode;
+      const group = document.getElementById("plannerTempoGroup");
+      if (group) {
+        group.querySelectorAll("button").forEach(btn => {
+          btn.classList.toggle("active", btn.dataset.tempo === mode);
+        });
+      }
+      if (!silent) autoSolveItinerary();
+    }
+
+    function autoSolveItinerary() {
+      if (!latestPlannerPOIs.length) return;
+      clearTimeout(autoSolveTimer);
+      autoSolveTimer = setTimeout(() => onSolveItinerary(true), 300);
+    }
+
+    function initDrawer() {
+      const drawer = document.getElementById("toolDrawer");
+      const handle = document.getElementById("drawerHandle");
+      if (!drawer || !handle) return;
+      const navButtons = drawer.querySelectorAll(".drawer-nav button");
+      const panels = drawer.querySelectorAll(".tool-panel");
+      const updateHandle = () => {
+        const closed = drawer.classList.contains("closed");
+        handle.textContent = closed ? "›" : "‹";
+      };
+      handle.addEventListener("click", () => {
+        drawer.classList.toggle("open");
+        drawer.classList.toggle("closed");
+        updateHandle();
+      });
+      navButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          navButtons.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          const targetId = btn.dataset.panel;
+          panels.forEach(p => p.classList.toggle("active", p.id === targetId));
+        });
+      });
+      drawer.classList.add("open");
+      drawer.classList.remove("closed");
+      updateHandle();
+    }
+
+    // ========= 天气功能 =========
+    function scheduleWeatherRefresh(reason = "auto") {
+      clearTimeout(weatherRefreshTimer);
+      weatherRefreshTimer = setTimeout(() => refreshWeather({ reason }), 350);
+    }
+
+    function formatWeekLabel(code) {
+      const map = { "1": "周一", "2": "周二", "3": "周三", "4": "周四", "5": "周五", "6": "周六", "7": "周日" };
+      return map[String(code)] || "";
+    }
+
+    function formatForecastDate(dateStr, weekCode) {
+      const week = formatWeekLabel(weekCode);
+      if (!dateStr) return week || "日期待定";
+      const parsed = new Date(`${dateStr.replace(/\./g, "-")}T00:00:00`);
+      if (Number.isNaN(parsed.getTime())) {
+        return `${dateStr}${week ? ` ${week}` : ""}`.trim();
+      }
+      return `${parsed.getMonth() + 1}月${parsed.getDate()}日${week ? ` ${week}` : ""}`;
+    }
+
+    function formatTemp(value) {
+      if (value === undefined || value === null || value === "") return "--°C";
+      const num = Number(value);
+      return Number.isNaN(num) ? `${value}°C` : `${num}°C`;
+    }
+
+    function formatReportTime(value) {
+      if (!value) return "";
+      const parsed = new Date(value.replace(" ", "T"));
+      if (Number.isNaN(parsed.getTime())) return value;
+      const pad = n => String(n).padStart(2, "0");
+      return `${parsed.getMonth() + 1}月${parsed.getDate()}日 ${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
+    }
+
+    function pickWeatherIcon(desc = "") {
+      if (desc.includes("雷")) return "⛈️";
+      if (desc.includes("雨")) return "🌧️";
+      if (desc.includes("雪")) return "❄️";
+      if (desc.includes("雾") || desc.includes("霾")) return "🌫️";
+      if (desc.includes("云") || desc.includes("阴")) return "⛅";
+      if (desc.includes("风")) return "🌬️";
+      if (desc.includes("晴")) return "☀️";
+      return "🌤️";
+    }
+
+    async function refreshWeather({ reason } = {}) {
+      const box = document.getElementById("weatherResult");
+      if (!box) return;
+
+      const destInput = document.getElementById("destinationAddress");
+      const coordInput = document.getElementById("destination");
+      const address = destInput ? destInput.value.trim() : "";
+      const coords = coordInput ? coordInput.value.trim() : "";
+
+      if (!coords && !address) {
+        box.innerHTML = '<span class="muted">请先设置终点以获取天气。</span>';
+        return;
+      }
+
+      box.innerHTML = '<div style="text-align:center;padding:20px;"><span class="muted">正在获取天气数据...</span></div>';
+      const params = new URLSearchParams();
+      if (coords) params.set("location", coords);
+      if (address) params.set("city", address);
+
+      try {
+        const resp = await fetch(`${BASE_URL}/weather/forecast?${params.toString()}`);
+        if (!resp.ok) throw new Error(`服务异常 (${resp.status})`);
+        const data = await resp.json();
+        if (data.status !== "1" || !Array.isArray(data.forecasts) || !data.forecasts.length) {
+          throw new Error(data.info || "暂无天气数据");
+        }
+
+        const cityName = data.city || address || "目的地";
+        const reportText = formatReportTime(data.report_time);
+        const list = data.forecasts.slice(0, 4);
+        const rows = list.map(cast => {
+          const tempRange = `${formatTemp(cast.night_temp)} - ${formatTemp(cast.day_temp)}`;
+          const description = `白天：${cast.day_weather || "-"}，夜间：${cast.night_weather || "-"}`;
+          return `
+            <div style="display:flex;align-items:center;gap:12px;padding:8px;background:#f9fafb;border-radius:8px;border:1px solid #eee;">
+              <div style="font-size:24px;">${pickWeatherIcon(cast.day_weather || cast.night_weather || "")}</div>
+              <div style="flex:1;">
+                <div style="font-weight:600;font-size:14px;color:#333;">${formatForecastDate(cast.date, cast.week)} <span style="font-weight:400;color:#666;margin-left:6px;">${tempRange}</span></div>
+                <div style="font-size:12px;color:#666;">${description}</div>
+              </div>
+              <div style="font-size:12px;color:#888;text-align:right;">
+                <div>风向：${cast.day_wind || cast.night_wind || "-"}</div>
+                <div>风力：${cast.day_power || cast.night_power || "-"}级</div>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        box.innerHTML = `
+          <div style="margin-bottom:10px;font-weight:600;color:#2d6cdf;">📍 ${cityName} 天气预报</div>
+          ${reportText ? `<div class="small muted" style="margin-bottom:6px;">更新于 ${reportText}</div>` : ""}
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            ${rows}
+          </div>
+        `;
+      } catch (error) {
+        box.innerHTML = `<div style="color:#c0392b;font-size:13px;">天气数据获取失败：${error.message || error}</div>`;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const weatherBtn = document.querySelector('button[data-panel="weatherPanel"]');
+      if (weatherBtn) {
+        weatherBtn.addEventListener("click", () => refreshWeather({ reason: "panel-click" }));
+      }
+      scheduleWeatherRefresh("init");
+    });
+
+
+    async function requestTripAgent() {
+      if (tripAgentLoading || !tripAgentHistory.length) return;
+      tripAgentLoading = true;
+      try {
+        const data = await postJSON("/agent/trip-briefing", {
+          model: "moonshot-v1-8k",
+          temperature: 0.4,
+          messages: tripAgentHistory
+        });
+        if (!data || data.status !== "1") {
+          appendTripAgentMessage("ai", "Agent 调用失败：" + (data?.info || "未知错误"));
+          return;
+        }
+        const reply = data.reply || data.content || "（无回复）";
+        const ask = data.ask && data.ask !== reply ? data.ask : "";
+        const combined = ask ? `${reply}\n${ask}` : reply;
+        tripAgentHistory.push({ role: "assistant", content: combined });
+        appendTripAgentMessage("ai", combined);
+        tripAgentLastAnswer = reply;
+        if (data.slots) {
+          tripAgentSummary = data.slots;
+          renderTripAgentSummary(data.slots);
+        }
+        renderTripAgentFinal();
+      } catch (err) {
+        appendTripAgentMessage("ai", "Agent 出错：" + err);
+      } finally {
+        tripAgentLoading = false;
+      }
+    }
+
+    function onTripAgentStart() {
+      tripAgentHistory = [];
+      tripAgentSummary = null;
+      tripAgentLastAnswer = "";
+      tripAgentLoading = false;
+      const convo = document.getElementById("tripAgentConvo");
+      if (convo) convo.innerHTML = "";
+      renderTripAgentSummary(null);
+      renderTripAgentFinal();
+      const kickoff = "请你以旅行需求访谈顾问的身份主动开场，并一步步询问出行计划所需信息。";
+      tripAgentHistory.push({ role: "user", content: kickoff });
+      appendTripAgentMessage("me", "(系统) " + kickoff);
+      requestTripAgent();
+    }
+
+    function applyTripSummaryToPlanner() {
+      if (!tripAgentSummary) {
+        alert("请先在访谈模块获取信息提炼结果");
+        return;
+      }
+      const budgetVal = parseBudgetFromText(tripAgentSummary.budget);
+      const paceVal = parseTempoFromText(tripAgentSummary.pace);
+      const themes = Array.isArray(tripAgentSummary.themes) ? tripAgentSummary.themes.filter(Boolean) : [];
+      const days = tripAgentSummary.trip_days;
+      const budgetInput = document.getElementById("plannerBudget");
+      if (budgetInput && budgetVal != null) {
+        budgetInput.value = budgetVal;
+      }
+      if (paceVal) {
+        setPlannerTempo(paceVal);
+      }
+      const poiText = document.getElementById("plannerPOIs");
+      if (poiText && themes.length && poiText.value.trim() === "") {
+        poiText.placeholder = `根据主题（${themes.join("、")}）填写景点，例如：\n博物馆 |  | 09:00-17:00 | 90 | 80 | 4`;
+      }
+      const noteBox = document.getElementById("plannerResult");
+      if (noteBox) {
+        const aiText = tripAgentLastAnswer ? `<div class="small" style="margin-top:4px;">AI 总结：${tripAgentLastAnswer}</div>` : "";
+        noteBox.innerHTML = `<span class="muted small">已同步访谈信息：预算${budgetVal != null ? "≈ " + budgetVal + " 元" : "未提供"}，节奏 ${paceVal === "relax" ? "悠闲" : paceVal === "rush" ? "紧凑" : "均衡"}${days ? "，行程天数 " + days : ""}。</span>${aiText}`;
+      }
+      const plannerStart = document.getElementById("plannerStart");
+      const plannerEnd = document.getElementById("plannerEnd");
+      if (plannerStart && plannerEnd && tripAgentSummary.depart_window && tripAgentSummary.depart_window.includes("-")) {
+        const [s, e] = tripAgentSummary.depart_window.split("-").map(s => s.trim());
+        if (s) plannerStart.value = s;
+        if (e) plannerEnd.value = e;
+      }
+      alert("已将访谈结果同步到行程设置，可继续补充景点并求解。");
+    }
+
+    function resetTripAgent() {
+      tripAgentHistory = [];
+      tripAgentSummary = null;
+      tripAgentLastAnswer = "";
+      tripAgentLoading = false;
+      const convo = document.getElementById("tripAgentConvo");
+      if (convo) convo.innerHTML = "<div class='muted'>点击“开始访谈”由 Agent 主动发问</div>";
+      renderTripAgentSummary(null);
+      renderTripAgentFinal();
+      const input = document.getElementById("tripAgentInput");
+      if (input) input.value = "";
+    }
+
+    function onTripAgentSend() {
+      if (!tripAgentHistory.length) {
+        alert("请先点击“开始访谈”，让 Agent 发起对话。");
+        return;
+      }
+      if (tripAgentLoading) {
+        alert("Agent 正在回复，请稍候…");
+        return;
+      }
+      const input = document.getElementById("tripAgentInput");
+      if (!input) return;
+      const val = input.value.trim();
+      if (!val) {
+        alert("请输入要回复 Agent 的内容");
+        return;
+      }
+      input.value = "";
+      tripAgentHistory.push({ role: "user", content: val });
+      appendTripAgentMessage("me", val);
+      requestTripAgent();
+    }
+
+    function setSubwayButtonState() {
+      const btn = document.getElementById("subwayBtn");
+      if (btn) {
+        btn.textContent = subwayVisible ? "隐藏地铁图" : "显示地铁图";
+      }
+    }
+
+    function getMapCityName() {
+      return new Promise(resolve => {
+        if (!map || typeof map.getCity !== "function") {
+          resolve("北京");
+          return;
+        }
+        map.getCity(info => {
+          if (info && info.city && info.city !== "[]") {
+            resolve(info.city.replace(/市$/, ""));
+          } else {
+            resolve("北京");
+          }
+        });
+      });
+    }
+
+    async function toggleSubwayLayer() {
+      if (!window.AMap || !map) {
+        alert("地图尚未加载完成");
+        return;
+      }
+      if (!subwayLayer) {
+        const cityName = await getMapCityName();
+        return new Promise((resolve, reject) => {
+          AMap.plugin(["AMap.Subway"], () => {
+            try {
+              subwayLayer = new AMap.Subway({
+                map,
+                city: cityName || "北京",
+                opacity: 0.85,
+                showRailway: true,
+                zooms: [10, 20]
+              });
+              subwayVisible = true;
+              setSubwayButtonState();
+              resolve();
+            } catch (err) {
+              alert("地铁图层暂不可用：" + err);
+              reject(err);
+            }
+          });
+        });
+      }
+      subwayVisible = !subwayVisible;
+      subwayLayer.setMap(subwayVisible ? map : null);
+      setSubwayButtonState();
+    }
+
+    function onLocateUser() {
+      if (!geolocationCtrl) {
+        alert("定位组件初始化中，请稍后再试");
+        return;
+      }
+      geolocationCtrl.getCurrentPosition((status, result) => {
+        if (status === "complete" && result && result.position) {
+          let lng = null;
+          let lat = null;
+          if (typeof result.position.getLng === "function") {
+            lng = result.position.getLng();
+            lat = result.position.getLat();
+          } else if (result.position.lng !== undefined) {
+            lng = result.position.lng;
+            lat = result.position.lat;
+          }
+          if (typeof lng !== "number" || typeof lat !== "number") {
+            alert("解析定位结果失败");
+            return;
+          }
+          const pos = [lng, lat];
+          if (myLocationMarker) {
+            map.remove(myLocationMarker);
+          }
+          myLocationMarker = new AMap.Marker({
+            position: pos,
+            icon: "https://webapi.amap.com/theme/v1.3/markers/n/mark_b.png",
+            zIndex: 120,
+            label: { content: "当前位置", direction: "top" }
+          });
+          map.add(myLocationMarker);
+          map.setZoomAndCenter(14, pos);
+          if (!document.getElementById("origin").value.trim()) {
+            setOrigin(`${lng.toFixed(6)},${lat.toFixed(6)}`);
+            clicks = Math.max(clicks, 1);
+          }
+          refreshDistanceState();
+          alert(`定位成功：${lng.toFixed(4)},${lat.toFixed(4)}`);
+        } else {
+          const errMsg = result && result.message ? result.message : status;
+          alert("定位失败：" + errMsg);
+        }
+      });
+    }
+
+    // ======== 交互增强：自动重绘 & 选中样式 ========
+    let _redrawTimer = null;
+    function scheduleRedraw() {
+      clearTimeout(_redrawTimer);
+      _redrawTimer = setTimeout(() => {
+        const o = document.getElementById("origin").value.trim();
+        const d = document.getElementById("destination").value.trim();
+        if (!o || !d) return;
+        if (currentMode === "drive") onDrawDriving();
+        else if (currentMode === "walk") onDrawWalking();
+        else if (currentMode === "bike") onDrawBicycling();
+        else if (currentMode === "ebike") onDrawEbike();
+        else if (currentMode === "transit") onDrawTransit();
+      }, 200);
+    }
+    function bindRadioGroup(name) {
+      const nodes = document.querySelectorAll(`input[name=${name}]`);
+      const setActive = () => {
+        nodes.forEach(n => n.parentElement.classList.toggle('active', n.checked));
+        scheduleRedraw();
+      };
+      nodes.forEach(n => {
+        n.addEventListener('change', setActive);
+        // 初始状态
+        n.parentElement.classList.toggle('active', n.checked);
+      });
+    }
+    function toggleUserPanel(force) {
+      const panel = document.getElementById("userPanel");
+      if (!panel) return;
+      if (force === true) {
+        panel.classList.add("open");
+      } else if (force === false) {
+        panel.classList.remove("open");
+      } else {
+        panel.classList.toggle("open");
+      }
+    }
+    let userData = [];
+    let searchTimer = null;
+
+    async function fetchUsers(keyword = "") {
+      const list = document.getElementById("userList");
+      if (list) list.innerHTML = '<div class="muted small">加载中...</div>';
+
+      try {
+        const res = await postJSON("/users/search", { keyword, limit: 50 });
+        if (res && res.status === "1") {
+          renderUserList(res.users);
+        } else {
+          if (list) list.innerHTML = '<div class="muted small">获取失败</div>';
+        }
+      } catch (e) {
+        if (list) list.innerHTML = '<div class="muted small">网络错误</div>';
+      }
+    }
+    function renderUserList(users) {
+      userData = Array.isArray(users) ? users : [];
+      const list = document.getElementById("userList");
+      const countEl = document.getElementById("userCount");
+      if (countEl) countEl.textContent = userData.length || 0;
+      if (!list) return;
+      list.innerHTML = "";
+      if (!userData.length) {
+        list.innerHTML = '<div class="muted small">暂无用户</div>';
+        return;
+      }
+      userData.forEach(u => {
+        const card = document.createElement("div");
+        card.className = "user-card";
+        const searchKeys = [u.username || "", u.phone || "", u.email || ""].join(" ").toLowerCase();
+        card.dataset.search = searchKeys;
+
+        const title = document.createElement("div");
+        title.className = "user-card__title";
+        title.textContent = u.username || "未命名用户";
+
+        const phone = document.createElement("div");
+        phone.className = "user-card__meta";
+        phone.textContent = "电话：" + (u.phone || "—");
+
+        const email = document.createElement("div");
+        email.className = "user-card__meta";
+        email.textContent = "邮箱：" + (u.email || "—");
+
+        const created = document.createElement("div");
+        created.className = "user-card__meta muted";
+        created.textContent = "注册时间：" + (u.created_at || "—");
+
+        card.append(title, phone, email, created);
+        list.appendChild(card);
+      });
+    }
+    function bindUserSearch() {
+      const searchInput = document.getElementById("userSearch");
+      if (!searchInput) return;
+
+      searchInput.addEventListener("input", () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+          const val = searchInput.value.trim();
+          fetchUsers(val);
+        }, 300);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      bindRadioGroup('strategy');
+      bindRadioGroup('cartype');
+      const handleInputChange = () => {
+        refreshDistanceState();
+        scheduleRedraw();
+      };
+      ['origin', 'destination'].forEach(id => {
+        const el = document.getElementById(id);
+        el.addEventListener('change', handleInputChange);
+        el.addEventListener('keyup', e => { if (e.key === 'Enter') { handleInputChange(); } });
+      });
+      ['originAddress', 'destinationAddress'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('keyup', e => {
+          if (e.key === 'Enter') {
+            const kind = id === 'originAddress' ? 'origin' : 'destination';
+            geocodeAddress(kind, { autoPlan: true });
+          }
+        });
+      });
+      const plannerStartInput = document.getElementById("plannerStartLoc");
+      if (plannerStartInput) {
+        plannerStartInput.addEventListener("blur", () => resolvePlannerStartLocation({ silent: true }));
+        plannerStartInput.addEventListener("keyup", e => { if (e.key === "Enter") resolvePlannerStartLocation(); });
+      }
+      const plannerInput = document.getElementById("plannerPOIs");
+      if (plannerInput) {
+        plannerInput.addEventListener('input', () => parsePlannerPOIs());
+      }
+      refreshDistanceState();
+      renderTripAgentSummary(null);
+      parsePlannerPOIs();
+      setPlannerTempo(plannerState.tempo, true);
+      initDrawer();
+      // 初始加载用户列表
+      fetchUsers();
+      bindUserSearch();
+    });
+
+    // 加载地图
+    AMapLoader.load({
+      key: AMAP_JS_KEY,
+      version: "1.4.15", // Subway 插件在 1.x 可用
+      plugins: ["AMap.Geocoder", "AMap.Geolocation", "AMap.Subway", "AMap.Autocomplete", "AMap.PlaceSearch"]
+    }).then((AMap) => {
+      map = new AMap.Map("map", {
+        zoom: 12,
+        center: [116.397428, 39.90923]
+      });
+      AMap.plugin(["AMap.Geolocation", "AMap.Geocoder"], () => {
+        geolocationCtrl = new AMap.Geolocation({
+          enableHighAccuracy: true,
+          timeout: 10000,
+          zoomToAccuracy: true,
+          position: "RT",
+          buttonOffset: new AMap.Pixel(10, 20)
+        });
+        map.addControl(geolocationCtrl);
+        geocoder = new AMap.Geocoder({
+          city: "全国",
+          radius: 1000
+        });
+      });
+      initAutocomplete(AMap);
+
+      map.on("click", (e) => {
+        const lnglat = `${e.lnglat.getLng().toFixed(6)},${e.lnglat.getLat().toFixed(6)}`;
+        if (clicks === 0) {
+          setOrigin(lnglat);
+        } else if (clicks === 1) {
+          setDestination(lnglat);
+        } else {
+          addWaypoint(lnglat);
+        }
+        clicks += 1;
+      });
+    });
+
+    function normalizeLngLatInput(lnglat) {
+      if (Array.isArray(lnglat)) {
+        return lnglat.map(Number);
+      }
+      if (typeof lnglat === "string") {
+        const arr = lnglat.split(",").map(Number);
+        if (arr.length === 2 && !arr.some(isNaN)) {
+          return arr;
+        }
+      }
+      if (lnglat && typeof lnglat.lng === "number" && typeof lnglat.lat === "number") {
+        return [lnglat.lng, lnglat.lat];
+      }
+      return null;
+    }
+
+    function reverseGeocodeIfPossible(lnglat, targetInputId) {
+      if (!geocoder || typeof AMap === "undefined") return;
+      const coords = normalizeLngLatInput(lnglat);
+      if (!coords) return;
+      geocoder.getAddress(new AMap.LngLat(coords[0], coords[1]), (status, result) => {
+        if (status === "complete" && result && result.regeocode) {
+          const input = document.getElementById(targetInputId);
+          if (input) {
+            input.value = result.regeocode.formattedAddress || input.value;
+          }
+        }
+      });
+    }
+
+    function setOrigin(lnglat, options = {}) {
+      const coords = normalizeLngLatInput(lnglat);
+      if (!coords) return;
+      document.getElementById("origin").value = `${coords[0]},${coords[1]}`;
+      if (startMarker) map.remove(startMarker);
+      startMarker = new AMap.Marker({
+        position: coords,
+        label: { content: "起点", direction: "top" }
+      });
+      map.add(startMarker);
+      if (options.address) {
+        document.getElementById("originAddress").value = options.address;
+      } else if (!options.skipReverse) {
+        reverseGeocodeIfPossible(coords, "originAddress");
+      }
+      refreshDistanceState();
+      focusOnMarkers();
+    }
+
+    function setDestination(lnglat, options = {}) {
+      const coords = normalizeLngLatInput(lnglat);
+      if (!coords) return;
+      document.getElementById("destination").value = `${coords[0]},${coords[1]}`;
+      if (endMarker) map.remove(endMarker);
+      endMarker = new AMap.Marker({
+        position: coords,
+        label: { content: "终点", direction: "top" }
+      });
+      map.add(endMarker);
+      if (options.address) {
+        document.getElementById("destinationAddress").value = options.address;
+      } else if (!options.skipReverse) {
+        reverseGeocodeIfPossible(coords, "destinationAddress");
+      }
+      refreshDistanceState();
+      focusOnMarkers();
+      scheduleWeatherRefresh("destination-change");
+    }
+
+    function focusOnMarkers() {
+      if (!map) return;
+      const overlays = [];
+      if (startMarker) overlays.push(startMarker);
+      if (endMarker) overlays.push(endMarker);
+      if (overlays.length === 1) {
+        const pos = overlays[0].getPosition();
+        map.setZoomAndCenter(Math.max(map.getZoom(), 12), pos);
+      } else if (overlays.length === 2) {
+        map.setFitView(overlays);
+      }
+    }
+
+    function addWaypoint(lnglat) {
+      waypoints.push(lnglat);
+      const m = new AMap.Marker({
+        position: lnglat.split(",").map(Number),
+        icon: "https://webapi.amap.com/theme/v1.3/markers/n/mark_bs.png",
+        label: { content: `途经${waypoints.length}`, direction: "top" }
+      });
+      waypointMarkers.push(m);
+      map.add(m);
+      updateWpCount();
+    }
+
+    function updateWpCount() {
+      document.getElementById("wpCount").innerText = waypoints.length;
+    }
+
+    function confirmLocation(kind) {
+      const inputId = kind === "destination" ? "destinationAddress" : "originAddress";
+      const input = document.getElementById(inputId);
+      const keyword = input ? input.value.trim() : "";
+      if (!keyword) {
+        alert("请输入地点名称");
+        return;
+      }
+      searchPlaceWithFallback(kind, keyword, { autoPlan: true, silentAlert: true });
+    }
+
+    function initAutocomplete(AMapInstance) {
+      if (!AMapInstance) return;
+      const AutoClass = AMapInstance.Autocomplete || AMapInstance.AutoComplete;
+      const PlaceClass = AMapInstance.PlaceSearch;
+      try {
+        placeSearch = PlaceClass ? new PlaceClass({
+          city: "全国",
+          pageSize: 10,
+          map: null
+        }) : null;
+      } catch (err) {
+        placeSearch = null;
+      }
+      ["origin", "destination"].forEach(kind => {
+        const inputId = kind === "origin" ? "originAddress" : "destinationAddress";
+        if (!document.getElementById(inputId)) return;
+        try {
+          autoCompleteRefs[kind] = AutoClass ? new AutoClass({
+            input: inputId,
+            city: "全国",
+            citylimit: false
+          }) : null;
+          if (autoCompleteRefs[kind]) {
+            autoCompleteRefs[kind].on("select", event => handleAutocompleteSelect(kind, event));
+          }
+        } catch (err) {
+          console.warn("AutoComplete init failed", err);
+        }
+      });
+    }
+
+    function applyLocationSelection(kind, coords, label) {
+      if (!Array.isArray(coords) || coords.length !== 2) return;
+      const options = { address: label || "", skipReverse: true };
+      if (kind === "destination") {
+        setDestination(coords, options);
+        clicks = Math.max(clicks, 2);
+      } else {
+        setOrigin(coords, options);
+        clicks = Math.max(clicks, 1);
+      }
+    }
+
+    function fetchPoiFromRest(keyword) {
+      return fetch(`https://restapi.amap.com/v3/place/text?${new URLSearchParams({
+        key: AMAP_JS_KEY,
+        keywords: keyword,
+        offset: 5,
+        page: 1,
+        extensions: "base"
+      })}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.status === "1" && data.pois && data.pois.length) {
+            const poi = data.pois[0];
+            if (poi.location) {
+              const [lng, lat] = poi.location.split(",").map(Number);
+              if (!isNaN(lng) && !isNaN(lat)) {
+                return { lng, lat, name: poi.name, address: poi.address || "" };
+              }
+            }
+          }
+          throw new Error("no-poi");
+        });
+    }
+
+    function handleResolvedLocation(kind, info, options) {
+      applyLocationSelection(kind, [info.lng, info.lat], info.name || info.address);
+      if (options && options.autoPlan) {
+        scheduleRedraw();
+      }
+    }
+
+    function searchPlaceWithFallback(kind, keyword, options = {}) {
+      const handleFailure = () => {
+        geocodeAddress(kind, {
+          keyword,
+          autoPlan: options.autoPlan,
+          fromSearch: true,
+          silentAlert: options.silentAlert
+        });
+      };
+
+      const tryRest = () => {
+        fetchPoiFromRest(keyword)
+          .then(info => handleResolvedLocation(kind, info, options))
+          .catch(handleFailure);
+      };
+
+      if (placeSearch) {
+        placeSearch.search(keyword, (status, result) => {
+          if (
+            status === "complete" &&
+            result &&
+            result.poiList &&
+            result.poiList.pois &&
+            result.poiList.pois.length
+          ) {
+            const info = result.poiList.pois[0];
+            if (info.location) {
+              handleResolvedLocation(
+                kind,
+                { lng: info.location.lng, lat: info.location.lat, name: info.name || keyword, address: info.address || "" },
+                options
+              );
+              return;
+            }
+          }
+          tryRest();
+        });
+      } else {
+        tryRest();
+      }
+    }
+
+    function handleAutocompleteSelect(kind, event) {
+      if (!event) return;
+      const poi = event.poi || {};
+      const name = poi.name || event.value || "";
+      const label = (poi.district || "") + name;
+      if (poi.location && typeof poi.location.lng === "number" && typeof poi.location.lat === "number") {
+        applyLocationSelection(kind, [poi.location.lng, poi.location.lat], label);
+        return;
+      }
+      if (!name) {
+        return;
+      }
+      if (placeSearch) {
+        placeSearch.setCity(poi.adcode || "");
+        placeSearch.search(name, (status, result) => {
+          if (status === "complete" && result && result.poiList && result.poiList.pois && result.poiList.pois.length) {
+            const info = result.poiList.pois[0];
+            if (info.location) {
+              applyLocationSelection(
+                kind,
+                [info.location.lng, info.location.lat],
+                info.name || label || name
+              );
+              return;
+            }
+          }
+          geocodeAddress(kind, { keyword: name, silentAlert: true, autoPlan: true });
+        });
+      } else {
+        geocodeAddress(kind, { keyword: name, silentAlert: true, autoPlan: true });
+      }
+    }
+
+    function geocodeAddress(kind, options = {}) {
+      if (!geocoder) {
+        if (!options.silentAlert) {
+          alert("地理编码服务初始化中，请稍后再试。");
+        }
+        return;
+      }
+      const inputId = kind === "destination" ? "destinationAddress" : "originAddress";
+      const input = document.getElementById(inputId);
+      const keywordFromInput = input ? input.value.trim() : "";
+      const keyword = (options.keyword || "").trim() || keywordFromInput;
+      if (!keyword) {
+        if (!options.silentAlert) {
+          alert("请输入地点名称");
+        }
+        return;
+      }
+      if (input && !options.keyword) {
+        input.classList.add("loading");
+      }
+      geocoder.getLocation(keyword, (status, result) => {
+        if (input && !options.keyword) {
+          input.classList.remove("loading");
+        }
+        if (status === "complete" && result && result.geocodes && result.geocodes.length) {
+          const info = result.geocodes[0];
+          const loc = info.location;
+          const coords = [loc.lng, loc.lat];
+          const formatted = info.formattedAddress || keyword;
+          if (kind === "destination") {
+            setDestination(coords, { address: formatted, skipReverse: true });
+            clicks = Math.max(clicks, 2);
+          } else {
+            setOrigin(coords, { address: formatted, skipReverse: true });
+            clicks = Math.max(clicks, 1);
+          }
+          if (options.autoPlan) {
+            scheduleRedraw();
+          }
+        } else {
+          // 如果地理编码失败，且有关键词并且不是从搜索兜底过来的，再尝试 PlaceSearch + REST 兜底
+          if (keyword && placeSearch && !options.fromSearch) {
+            searchPlaceWithFallback(kind, keyword, options);
+            return;
+          }
+          if (!options.silentAlert) {
+            alert("没有找到对应地点，请尝试更精确的描述。");
+          }
+        }
+      });
+    }
+
+    // ========= 路线洞察（上下文 + 沿途景点） =========
+    function normalizeMode(mode) {
+      const map = {
+        drive: "driving",
+        driving: "driving",
+        walk: "walking",
+        walking: "walking",
+        bike: "bicycling",
+        bicycling: "bicycling",
+        ebike: "electrobike",
+        electrobike: "electrobike",
+        transit: "transit"
+      };
+      return map[mode] || (mode || "driving");
+    }
+    function downsamplePolylineStrings(points, maxPoints = 120) {
+      if (!points || !points.length) return [];
+      if (points.length <= maxPoints) return points.slice();
+      const step = Math.ceil(points.length / maxPoints);
+      const sampled = [];
+      for (let i = 0; i < points.length; i += step) {
+        sampled.push(points[i]);
+      }
+      const last = points[points.length - 1];
+      if (sampled[sampled.length - 1] !== last) {
+        sampled.push(last);
+      }
+      return sampled;
+    }
+    function buildRouteMeta(mode, amapJson, origin, destination, polylineCount) {
+      if (!amapJson || !amapJson.route || !amapJson.route.paths || !amapJson.route.paths.length) {
+        return null;
+      }
+      const path = amapJson.route.paths[0];
+      const dist = path.distance ? Number(path.distance) : NaN;
+      const distanceKm = isNaN(dist) ? null : Number((dist / 1000).toFixed(1));
+      let durationMin = null;
+      let durSec = path.cost && path.cost.duration ? Number(path.cost.duration) : NaN;
+      if ((durSec === null || isNaN(durSec)) && path.duration) {
+        durSec = Number(path.duration);
+      }
+      if (!isNaN(durSec)) {
+        durationMin = Number((durSec / 60).toFixed(1));
+      }
+      const stats = {
+        tolls: path.tolls !== undefined ? Number(path.tolls) : undefined,
+        lights: path.traffic_lights !== undefined ? Number(path.traffic_lights) : undefined,
+        strategy: mode === "driving" ? getCurrentStrategy() : undefined,
+        cartype: mode === "driving" ? getCurrentCartype() : undefined,
+        plate: mode === "driving" ? getCurrentPlate() : undefined,
+        segments: path.steps ? path.steps.length : undefined,
+        polyline_points: polylineCount
+      };
+      Object.keys(stats).forEach(key => {
+        if (stats[key] === undefined || stats[key] === null || Number.isNaN(stats[key])) {
+          delete stats[key];
+        }
+      });
+      return {
+        mode,
+        origin,
+        destination,
+        distance_km: distanceKm,
+        duration_min: durationMin,
+        waypoints: waypoints.slice(),
+        stats: Object.keys(stats).length ? stats : undefined
+      };
+    }
+    function renderSightsPanel(data) {
+      const box = document.getElementById("sightsList");
+      if (!box) return;
+      if (!data) {
+        box.innerHTML = "<span class='muted small'>绘制路线后将自动推荐沿途景点</span>";
+        return;
+      }
+      if (data.loading) {
+        box.innerHTML = "<span class='muted small'>正在获取沿途景点…</span>";
+        return;
+      }
+      if (data.error) {
+        box.innerHTML = `<span class='small' style='color:#d35400;'>沿途景点获取失败：${data.error}</span>`;
+        return;
+      }
+      if (data.status !== "1" || !data.pois || !data.pois.length) {
+        box.innerHTML = "<span class='muted small'>暂未获取到沿途景点，可调整路线后重试。</span>";
+        return;
+      }
+      const cards = data.pois.slice(0, 5).map(p => {
+        const dist = typeof p.distance_m === "number" ? `${(p.distance_m / 1000).toFixed(1)} km` : "未知";
+        const tag = p.type ? `<span class="tag">${p.type}</span>` : "";
+        const highlight = p.highlight ? `<div class="muted">${p.highlight}</div>` : "";
+        const badge = p.recommended ? `<span class="badge" style="background:#fdebd0;border-color:#f5cba7;">最推荐</span>` : `<span class="badge">排名 #${p.rank || "?"}</span>`;
+        return `<div class="poi-item small" style="margin-top:4px;">
+          <div><b>${p.name}</b>${tag}</div>
+          <div class="muted">${p.address || ""}</div>
+          <div class="muted">距路线约 ${dist} ${badge}</div>
+          ${highlight}
+        </div>`;
+      }).join("");
+      box.innerHTML = cards + `<div class="muted small" style="margin-top:4px;">共 ${data.pois.length} 个候选景点</div>`;
+    }
+    async function fetchSightsAlong() {
+      if (!lastRouteMeta || !lastPolylineStrings.length) {
+        lastSightsResponse = null;
+        renderSightsPanel(null);
+        return;
+      }
+      const token = ++sightsReqToken;
+      renderSightsPanel({ loading: true });
+      try {
+        const payload = {
+          path: downsamplePolylineStrings(lastPolylineStrings, 90),
+          origin: lastRouteMeta.origin,
+          destination: lastRouteMeta.destination,
+          mode: lastRouteMeta.mode,
+          radius: lastRouteMeta.mode === "walking" ? 900 : 1500
+        };
+        const data = await postJSON("/route/sights-along", payload);
+        if (token !== sightsReqToken) return;
+        lastSightsResponse = data && data.status === "1" ? data : null;
+        renderSightsPanel(data);
+      } catch (err) {
+        if (token !== sightsReqToken) return;
+        lastSightsResponse = null;
+        renderSightsPanel({ error: err?.message || err });
+      }
+    }
+    function updateRouteContext(mode, amapJson, origin, destination, coords) {
+      if (!coords || !coords.length) {
+        lastPolylineStrings = [];
+        lastRouteMeta = null;
+        sightsReqToken++;
+        renderSightsPanel(null);
+        return;
+      }
+      lastPolylineStrings = coords.map(pt => `${Number(pt[0]).toFixed(6)},${Number(pt[1]).toFixed(6)}`);
+      const normalized = normalizeMode(mode);
+      lastRouteMeta = buildRouteMeta(normalized, amapJson, origin, destination, coords.length);
+      if (lastRouteMeta) {
+        fetchSightsAlong();
+      } else {
+        renderSightsPanel(null);
+      }
+    }
+
+    // ========= 通用工具 =========
+    function fmtDuration(sec) {
+      if (!sec || isNaN(sec)) return "-";
+      sec = Math.round(sec);
+      const h = Math.floor(sec / 3600);
+      const m = Math.round((sec % 3600) / 60);
+      if (h > 0) return `${h} 小时 ${m} 分`;
+      return `${m} 分`;
+    }
+    async function updateSegmentTimes(mode, origin, destination) {
+      const points = [origin, ...waypoints, destination].filter(Boolean);
+      if (points.length < 2) { document.getElementById("segmentsBox").innerHTML = ""; return; }
+
+      const body = { mode, points };
+      if (mode === "driving") {
+        body.strategy = getCurrentStrategy();
+        body.cartype = getCurrentCartype();
+        body.ferry = 0;
+      }
+      try {
+        const j = await postJSON("/route/segments", body);
+        const box = document.getElementById("segmentsBox");
+        if (!j || j.status !== "1") { box.innerHTML = "<span class='muted'>未能获取分段时间</span>"; return; }
+
+        const arr = j.segments || [];
+        let html = "";
+        html += `<div style="margin:4px 0"><b>总耗时</b>：${fmtDuration(j.total_duration)} <span class="badge">共 ${(j.total_distance / 1000).toFixed(1)} km</span></div>`;
+        html += `<div class="muted" style="margin-bottom:4px">分段：起点 → 途经 → 终点</div>`;
+        html += `<ol style="padding-left:18px;margin:4px 0 0 0">`;
+        for (let i = 0; i < arr.length; i++) {
+          const seg = arr[i];
+          const nameA = (i === 0 ? "起点" : `途经${i}`);
+          const nameB = (i === arr.length - 1 ? "终点" : `途经${i + 1}`);
+          html += `<li>${nameA} → ${nameB}：${fmtDuration(seg.duration)} <span class="badge">${(seg.distance / 1000).toFixed(1)} km</span></li>`;
+        }
+        html += `</ol>`;
+        box.innerHTML = html;
+      } catch (e) {
+        document.getElementById("segmentsBox").innerHTML = "分段统计失败：" + e;
+      }
+    }
+    function getCurrentStrategy() {
+      const el = document.querySelector('input[name=strategy]:checked');
+      return Number(el ? el.value : "32");
+    }
+    function getCurrentCartype() {
+      const el = document.querySelector('input[name=cartype]:checked');
+      return Number(el ? el.value : "0");
+    }
+    function getCurrentPlate() {
+      const el = document.getElementById("plateNumber");
+      if (!el) return "";
+      return el.value.trim();
+    }
+    function showStatsFromDrivingJson(json) {
+      const statsEl = document.getElementById("stats");
+      if (!json || json.status !== "1" || !json.route || !json.route.paths || !json.route.paths.length) {
+        statsEl.innerHTML = `<span class="muted">未获取到路线</span>`;
+        updateStrategyCount(null);
+        return;
+      }
+      const routeCount = json.route.paths.length;
+      updateStrategyCount(routeCount);
+      const p = json.route.paths[0];
+      const dist = p.distance ? Number(p.distance) : NaN;
+      let durSec = 0, tolls = (p.tolls ? Number(p.tolls) : 0), lights = (p.traffic_lights ? Number(p.traffic_lights) : 0);
+      if (p.cost && p.cost.duration) durSec = Number(p.cost.duration);
+      const durMin = durSec ? Math.round(durSec / 60) : "-";
+      const km = isNaN(dist) ? "-" : (dist / 1000).toFixed(1);
+      const strategy = getCurrentStrategy();
+      statsEl.innerHTML = `<b>里程</b>：${km} km
+        <span class="badge">耗时：${durMin} 分钟</span>
+        <span class="badge">收费：${tolls} 元</span>
+        <span class="badge">红绿灯：${lights} 个</span>
+        <span class="badge">策略：${strategy}</span>`;
+      logDrivingExplanation(json);
+    }
+    function parsePolylineString(str) {
+      if (!str) return [];
+      return str.split(";").map(p => p.split(",").map(Number)).filter(arr => arr.length === 2 && !arr.some(isNaN));
+    }
+    function extractPolylineCoords(amapJson, mode) {
+      if (!amapJson || amapJson.status !== "1") { return []; }
+      if (!amapJson.route || !amapJson.route.paths || !amapJson.route.paths.length) {
+        const normalized = normalizeMode(mode);
+        if (normalized === "transit") {
+          const transits = amapJson.route && amapJson.route.transits;
+          if (!transits || !transits.length) return [];
+          const segments = transits[0].segments || [];
+          const all = [];
+          segments.forEach(seg => {
+            if (seg.walking && seg.walking.polyline) {
+              all.push(...parsePolylineString(seg.walking.polyline));
+            }
+            if (seg.bus && Array.isArray(seg.bus.buslines)) {
+              seg.bus.buslines.forEach(line => {
+                if (line.polyline) {
+                  all.push(...parsePolylineString(line.polyline));
+                }
+              });
+            }
+            if (seg.railway && seg.railway.polyline) {
+              all.push(...parsePolylineString(seg.railway.polyline));
+            }
+            if (seg.taxi && seg.taxi.polyline) {
+              all.push(...parsePolylineString(seg.taxi.polyline));
+            }
+          });
+          return all;
+        }
+        return [];
+      }
+      const path = amapJson.route.paths[0];
+      if (path.polyline) {
+        return parsePolylineString(path.polyline);
+      }
+      if (path.steps && path.steps.length) {
+        const pts = [];
+        for (const s of path.steps) {
+          if (s.polyline) {
+            pts.push(...parsePolylineString(s.polyline));
+          }
+        }
+        return pts;
+      }
+      return [];
+    }
+    function drawRoute(coords, origin, destination) {
+      if (!coords || coords.length === 0) {
+        alert("没有拿到 polyline，请检查后端 show_fields 是否包含 polyline；或打开开发者工具查看 /route 返回。");
+        return;
+      }
+      if (currentPolyline) { map.remove(currentPolyline); currentPolyline = null; }
+      const colorMap = {
+        drive: "#2d6cdf",
+        walk: "#27ae60",
+        bike: "#e67e22",
+        ebike: "#8e44ad",
+        transit: "#7f8c8d"
+      };
+      currentPolyline = new AMap.Polyline({ path: coords, strokeWeight: 6, strokeColor: colorMap[currentMode] || "#2d6cdf" });
+      map.add(currentPolyline);
+      const items = [currentPolyline];
+      if (startMarker) items.push(startMarker);
+      if (endMarker) items.push(endMarker);
+      if (waypointMarkers.length) items.push(...waypointMarkers);
+      if (items.length) map.setFitView(items);
+      document.getElementById("modeTag").innerText = ({
+        drive: "驾车", walk: "步行", bike: "骑行", ebike: "电动车", transit: "公交"
+      })[currentMode] || "—";
+    }
+
+    function setLoading(btn, on) { if (!btn) return; btn.classList[on ? 'add' : 'remove']('loading'); btn.disabled = !!on; }
+    function amapFailToast(json) {
+      const info = json && json.info ? json.info : "AMap 返回失败";
+      alert("路线获取失败：" + info);
+    }
+
+    // ========= 后端请求 =========
+    async function postJSON(path, body) {
+      const resp = await fetch(`${BASE_URL}${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      return resp.json();
+    }
+
+    // ========= 驾车 =========
+    async function onDrawDriving(ev) {
+      currentMode = "drive";
+      const btn = ev?.target;
+      setLoading(btn, true);
+      try {
+        const origin = document.getElementById("origin").value.trim();
+        const destination = document.getElementById("destination").value.trim();
+        if (!origin || !destination) { alert("请先设置起点与终点"); return; }
+        if (!ensureDrivingStrategyAllowed()) return;
+
+        const strategy = getCurrentStrategy();
+        const cartype = getCurrentCartype();
+        const plate = getCurrentPlate();
+
+        const body = {
+          origin, destination,
+          strategy, cartype,
+          show_fields: "cost,navi,polyline,tolls,toll_distance,traffic_lights,tmcs"
+        };
+        if (waypoints.length) body.waypoints = waypoints;
+        if (plate) body.plate = plate;
+
+        const json = await postJSON("/route/driving", body);
+        console.log("driving:", json);
+        if (!json || json.status !== "1") { amapFailToast(json); document.getElementById("stats").innerHTML = "<span class='muted'>未获取到路线</span>"; return; }
+        showStatsFromDrivingJson(json);
+        const coords = extractPolylineCoords(json, currentMode);
+        drawRoute(coords, origin, destination);
+        updateRouteContext(currentMode, json, origin, destination, coords);
+        await updateSegmentTimes("driving", origin, destination);
+      } finally {
+        setLoading(btn, false);
+      }
+    }
+
+    function onClearRoute() {
+      if (currentPolyline) { map.remove(currentPolyline); currentPolyline = null; }
+      document.getElementById("stats").innerHTML = "";
+      lastRouteMeta = null;
+      lastPolylineStrings = [];
+      lastSightsResponse = null;
+      sightsReqToken++;
+      renderSightsPanel(null);
+      updateStrategyCount(null);
+    }
+    function onClearMarkers() {
+      if (startMarker) { map.remove(startMarker); startMarker = null; }
+      if (endMarker) { map.remove(endMarker); endMarker = null; }
+      if (waypointMarkers.length) { map.remove(waypointMarkers); waypointMarkers = []; }
+      waypoints = [];
+      updateWpCount();
+      clicks = 0;
+      scheduleRedraw();
+      lastRouteMeta = null;
+      lastPolylineStrings = [];
+      lastSightsResponse = null;
+      sightsReqToken++;
+      renderSightsPanel(null);
+      updateStrategyCount(null);
+    }
+
+    // ========= 步行/骑行/电动车/公交 =========
+    async function onDrawWalking(ev) {
+      currentMode = "walk";
+      const btn = ev?.target;
+      setLoading(btn, true);
+      try {
+        const origin = document.getElementById("origin").value.trim();
+        const destination = document.getElementById("destination").value.trim();
+        if (!origin || !destination) { alert("请先设置起点与终点"); return; }
+        if (!ensureModeAllowed("walking")) return;
+        const json = await postJSON("/route/walking", {
+          origin, destination, isindoor: 0, show_fields: "cost,navi,polyline"
+        });
+        console.log("walking:", json);
+        if (!json || json.status !== "1") { amapFailToast(json); document.getElementById("stats").innerHTML = "<span class='muted'>未获取到路线</span>"; return; }
+        document.getElementById("stats").innerHTML = "";
+        const coords = extractPolylineCoords(json, currentMode);
+        drawRoute(coords, origin, destination);
+        updateRouteContext(currentMode, json, origin, destination, coords);
+        await updateSegmentTimes("walking", origin, destination);
+      } finally {
+        setLoading(btn, false);
+      }
+    }
+
+    async function onDrawBicycling(ev) {
+      currentMode = "bike";
+      const btn = ev?.target;
+      setLoading(btn, true);
+      try {
+        const origin = document.getElementById("origin").value.trim();
+        const destination = document.getElementById("destination").value.trim();
+        if (!origin || !destination) { alert("请先设置起点与终点"); return; }
+        if (!ensureModeAllowed("bicycling")) return;
+        const json = await postJSON("/route/bicycling", {
+          origin, destination, show_fields: "cost,navi,polyline"
+        });
+        console.log("bicycling:", json);
+        if (!json || json.status !== "1") { amapFailToast(json); document.getElementById("stats").innerHTML = "<span class='muted'>未获取到路线</span>"; return; }
+        document.getElementById("stats").innerHTML = "";
+        const coords = extractPolylineCoords(json, currentMode);
+        drawRoute(coords, origin, destination);
+        updateRouteContext(currentMode, json, origin, destination, coords);
+        await updateSegmentTimes("bicycling", origin, destination);
+      } finally {
+        setLoading(btn, false);
+      }
+    }
+
+    async function onDrawEbike(ev) {
+      currentMode = "ebike";
+      const btn = ev?.target;
+      setLoading(btn, true);
+      try {
+        const origin = document.getElementById("origin").value.trim();
+        const destination = document.getElementById("destination").value.trim();
+        if (!origin || !destination) { alert("请先设置起点与终点"); return; }
+        if (!ensureModeAllowed("electrobike")) return;
+        const json = await postJSON("/route/ebike", {
+          origin, destination, show_fields: "cost,navi,polyline"
+        });
+        console.log("ebike:", json);
+        if (!json || json.status !== "1") { amapFailToast(json); document.getElementById("stats").innerHTML = "<span class='muted'>未获取到路线</span>"; return; }
+        document.getElementById("stats").innerHTML = "";
+        const coords = extractPolylineCoords(json, currentMode);
+        drawRoute(coords, origin, destination);
+        updateRouteContext(currentMode, json, origin, destination, coords);
+        await updateSegmentTimes("electrobike", origin, destination);
+      } finally {
+        setLoading(btn, false);
+      }
+    }
+
+    async function onDrawTransit(ev) {
+      currentMode = "transit";
+      const btn = ev?.target;
+      setLoading(btn, true);
+      try {
+        const origin = document.getElementById("origin").value.trim();
+        const destination = document.getElementById("destination").value.trim();
+        if (!origin || !destination) { alert("请先设置起点与终点"); return; }
+        if (!ensureModeAllowed("transit")) return;
+        // 这里示例同城公交：北京=010 → 010；跨城把 city2 换成其他 citycode
+        const json = await postJSON("/route/transit", {
+          origin, destination, city1: "010", city2: "010",
+          strategy: 0, AlternativeRoute: 5, nightflag: 0,
+          show_fields: "cost,polyline"
+        });
+        console.log("transit:", json);
+        if (!json || json.status !== "1") { amapFailToast(json); document.getElementById("stats").innerHTML = "<span class='muted'>未获取到路线</span>"; return; }
+        document.getElementById("stats").innerHTML = "";
+        const coords = extractPolylineCoords(json, currentMode);
+        drawRoute(coords, origin, destination);
+        updateRouteContext(currentMode, json, origin, destination, coords);
+        document.getElementById("segmentsBox").innerHTML = "<span class='muted'>公交分段统计暂未实现（可根据线路段落细分）</span>";
+      } finally {
+        setLoading(btn, false);
+      }
+    }
+
+    // ========= POI 搜索 =========
+    async function onSearchPOI() {
+      const kw = document.getElementById("kw").value.trim();
+      const city = document.getElementById("citycode").value.trim(); // citycode 可空
+      if (!kw) { alert("请输入关键词"); return; }
+      const body = { keywords: kw, page_size: 10, page_num: 1 };
+      if (city) body.city = city;
+
+      const json = await postJSON("/poi/search", body);
+      console.log("poi:", json);
+      const box = document.getElementById("poiList");
+      box.innerHTML = "";
+      if (!json || json.status !== "1" || !json.pois || !json.pois.length) {
+        box.innerHTML = `<div class="muted small">没有结果</div>`;
+        return;
+      }
+      json.pois.forEach((poi, idx) => {
+        const li = document.createElement("div");
+        li.className = "poi-item";
+        const loc = poi.location; // "lng,lat"
+        li.innerHTML = `
+          <div><b>${poi.name || "未知"}</b>
+            ${poi.type ? `<span class="tag">${poi.type}</span>` : ""}
+          </div>
+          <div class="muted small">${poi.address || ""}</div>
+          <div class="muted small">坐标：${loc}</div>
+          <div style="margin-top:6px;">
+            <button onclick="setOrigin('${loc}');clicks=1;">设为起点</button>
+            <button onclick="setDestination('${loc}');clicks=Math.max(clicks,2);">设为终点</button>
+            <button onclick="addWaypoint('${loc}');clicks=Math.max(clicks,3);">加为途经</button>
+            <button class="primary" onclick="addPoiToPlanner('${encodeURIComponent(poi.name || "")}', '${encodeURIComponent(loc)}')">加入行程</button>
+          </div>
+        `;
+        box.appendChild(li);
+      });
+    }
+
+    async function onPoiAgentRecall() {
+      const cityInput = document.getElementById("poiAgentCity").value.trim();
+      const fallbackCity = document.getElementById("citycode").value.trim();
+      const city = cityInput || fallbackCity;
+      const theme = document.getElementById("poiAgentTheme").value.trim();
+      const keywords = document.getElementById("poiAgentKeywords").value.trim();
+      const profile = document.getElementById("poiAgentProfile").value.trim();
+      const priority = document.getElementById("poiAgentPriority").value;
+      const resultBox = document.getElementById("poiAgentResult");
+      if (!city) {
+        alert("请填写城市（可用 citycode）");
+        return;
+      }
+      if (!theme && !keywords) {
+        alert("请填写主题或关键词至少一项");
+        return;
+      }
+      resultBox.innerHTML = "<div class='muted'>智能召回中…</div>";
+      try {
+        const body = {
+          city,
+          theme: theme || undefined,
+          keywords: keywords || undefined,
+          user_profile: profile || undefined,
+          priority,
+          limit: 6
+        };
+        const data = await postJSON("/agent/poi-ranking", body);
+        if (!data || data.status !== "1") {
+          resultBox.innerHTML = `<span style="color:#c0392b;">召回失败：${data?.info || "未知错误"}</span>`;
+          return;
+        }
+        const baseMap = {};
+        (data.candidates || []).forEach(p => {
+          if (p && p.id) baseMap[p.id] = p;
+        });
+        const ranked = (data.ranked && data.ranked.length) ? data.ranked : [];
+        if (!ranked.length) {
+          resultBox.innerHTML = "<span class='muted'>智能排序暂无结果，可尝试更换主题或关键词。</span>";
+          return;
+        }
+        const cards = ranked.slice(0, 6).map((poi, idx) => {
+          const base = baseMap[poi.source_id] || baseMap[poi.id] || {};
+          const title = poi.name || base.name || `候选 ${idx + 1}`;
+          const addr = poi.address || base.address || base.adname || "";
+          const rating = poi.rating || base.rating || "-";
+          const reason = poi.reason || "";
+          const label = poi.tags && poi.tags.length ? poi.tags.join(" · ") : (base.type || "");
+          const loc = poi.location || base.location || "";
+          const encTitle = encodeURIComponent(title);
+          const encLoc = encodeURIComponent(loc);
+          return `<div class="poi-item small" style="margin-top:4px;">
+            <div><b>${title}</b> <span class="badge">评分 ${rating}</span></div>
+            <div class="muted">${addr}</div>
+            <div class="muted small">${label}</div>
+            ${reason ? `<div style="margin-top:4px;">${reason}</div>` : ""}
+            <div style="margin-top:4px;">
+               <button class="primary" onclick="addPoiToPlanner('${encTitle}', '${encLoc}')">加入行程</button>
+            </div>
+          </div>`;
+        }).join("");
+        const reply = data.reply ? `<div class="muted" style="margin-bottom:6px;">${data.reply}</div>` : "";
+        resultBox.innerHTML = reply + cards;
+      } catch (err) {
+        resultBox.innerHTML = `<span style="color:#c0392b;">调用异常：${err}</span>`;
+      }
+    }
+
+    function addPoiToPlanner(encName, encLoc) {
+      const name = decodeURIComponent(encName);
+      const loc = decodeURIComponent(encLoc);
+      const line = `${name} | ${loc} | 09:00-17:00 | 60 | 0 | 3`;
+      const area = document.getElementById("plannerPOIs");
+      if (area) {
+        area.value = (area.value.trim() ? area.value.trim() + "\n" : "") + line;
+        parsePlannerPOIs();
+        alert(`已添加 ${name} 到行程列表`);
+      }
+    }
+
+    function deletePlannerPoi(encoded) {
+      const name = decodeURIComponent(encoded);
+      const area = document.getElementById("plannerPOIs");
+      if (!area) return;
+      const lines = area.value.split(/\n+/).filter(Boolean);
+      const newLines = lines.filter(l => {
+        const p = parseSinglePoiLine(l);
+        return p && p.name !== name;
+      });
+      area.value = newLines.join("\n");
+      parsePlannerPOIs();
+    }
+
+    function parseSinglePoiLine(line) {
+      const parts = line.split("|").map(s => s.trim());
+      if (!parts[0]) return null;
+      const obj = {
+        name: parts[0] || "未命名POI",
+        location: parts[1] && parts[1].includes(",") ? parts[1] : null,
+        open_time: parts[2] && parts[2].includes("-") ? parts[2].split("-")[0].trim() : (parts[2] || null),
+        close_time: parts[2] && parts[2].includes("-") ? parts[2].split("-")[1].trim() : undefined,
+        stay_minutes: parts[3] ? Number(parts[3]) || 60 : 60,
+        cost: parts[4] ? Number(parts[4]) || 0 : 0,
+        priority: parts[5] ? Math.min(5, Math.max(1, Number(parts[5]) || 3)) : 3
+      };
+      return obj;
+    }
+    function parsePlannerPOIs() {
+      const text = document.getElementById("plannerPOIs").value.trim();
+      if (!text) return [];
+      const lines = text.split(/\n+/).map(s => s.trim()).filter(Boolean);
+      const list = lines.map(line => parseSinglePoiLine(line)).filter(Boolean);
+      latestPlannerPOIs = list;
+      renderPlannerActions();
+      return list;
+    }
+
+    function buildPoiLine(obj) {
+      const name = obj.name || "未命名POI";
+      const loc = obj.location || "";
+      const open = obj.time || obj.open_time || "";
+      const stay = obj.stay || obj.stay_minutes || "";
+      const cost = obj.cost || obj.price || "";
+      const pri = obj.priority || obj.pri || "";
+      return `${name} | ${loc} | ${open} | ${stay} | ${cost} | ${pri}`;
+    }
+
+    function appendPlannerPoi() {
+      const name = document.getElementById("plannerNewName").value.trim();
+      if (!name) { alert("请输入景点名称"); return; }
+      const loc = document.getElementById("plannerNewLoc").value.trim();
+      const time = document.getElementById("plannerNewTime").value.trim();
+      const stay = document.getElementById("plannerNewStay").value.trim();
+      const cost = document.getElementById("plannerNewCost").value.trim();
+      const pri = document.getElementById("plannerNewPri").value.trim();
+      const line = buildPoiLine({ name, location: loc, time, stay, cost, priority: pri });
+      const area = document.getElementById("plannerPOIs");
+      area.value = (area.value.trim() ? area.value.trim() + "\n" : "") + line;
+      clearPlannerNewPoi(false);
+      parsePlannerPOIs();
+    }
+
+    function clearPlannerNewPoi(clearLoc = true) {
+      ["plannerNewName", "plannerNewTime", "plannerNewStay", "plannerNewCost", "plannerNewPri"].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = "";
+      });
+      if (clearLoc) {
+        const loc = document.getElementById("plannerNewLoc"); if (loc) loc.value = "";
+      }
+    }
+
+    function prefillNewPoiLocation() {
+      const locInput = document.getElementById("plannerNewLoc");
+      if (!locInput) return;
+      const dest = document.getElementById("destination")?.value.trim();
+      if (dest && dest.includes(",")) {
+        locInput.value = dest;
+        return;
+      }
+      const origin = document.getElementById("origin")?.value.trim();
+      if (origin && origin.includes(",")) {
+        locInput.value = origin;
+        return;
+      }
+      alert("请先在地图上设置起点或终点，再一键带出坐标。");
+    }
+
+    function updatePlannerTextareaFromPOIs(pois) {
+      const area = document.getElementById("plannerPOIs");
+      if (!area) return;
+      const rows = (pois || []).map(p => {
+        const timeRange = p.open_time ? (p.close_time ? `${p.open_time}-${p.close_time}` : p.open_time) : "";
+        const stay = p.stay_minutes != null ? p.stay_minutes : (p.stay || p.stayMinutes || "");
+        const cost = (p.cost != null ? p.cost : "");
+        const priority = (p.priority != null ? p.priority : "");
+        return `${p.name || "未命名POI"} | ${p.location || ""} | ${timeRange} | ${stay} | ${cost} | ${priority}`;
+      });
+      area.value = rows.join("\n");
+    }
+
+    async function resolveMissingPoiLocations(pois) {
+      const needs = pois.filter(p => !p.location);
+      if (!needs.length) return pois;
+      const resultBox = document.getElementById("plannerResult");
+      if (resultBox) {
+        resultBox.innerHTML = "<span class='muted'>正在根据名称自动补全坐标…</span>";
+      }
+      const cityHint = (document.getElementById("poiAgentCity")?.value || document.getElementById("citycode")?.value || document.getElementById("destinationAddress")?.value || "").trim();
+      for (const poi of needs) {
+        try {
+          const resp = await postJSON("/geo/guess", { query: poi.name, city: cityHint || undefined });
+          if (resp && resp.status === "1" && resp.location) {
+            poi.location = resp.location;
+          }
+        } catch (_) { /* ignore single failure */ }
+      }
+      latestPlannerPOIs = pois;
+      renderPlannerActions();
+      updatePlannerTextareaFromPOIs(pois);
+      return pois;
+    }
+
+    function updatePlannerStartHint(text, color = "#6b7280") {
+      const el = document.getElementById("plannerStartHint");
+      if (!el) return;
+      el.textContent = text || "";
+      el.style.color = color;
+    }
+
+    async function resolvePlannerStartLocation({ silent = false } = {}) {
+      const input = document.getElementById("plannerStartLoc");
+      if (!input) return null;
+      const raw = input.value.trim();
+      if (!raw) {
+        plannerStartResolved = null;
+        updatePlannerStartHint("");
+        return null;
+      }
+      const loc = await resolveLocationInput(raw);
+      if (loc) {
+        plannerStartResolved = loc;
+        plannerStartLabel = raw.split("|")[0].trim() || loc;
+        updatePlannerStartHint(`已解析起点：${loc}`, "#2d6cdf");
+        if (!findLngLatInText(raw)) {
+          input.value = `${raw} | ${loc}`;
+        }
+        return loc;
+      }
+      plannerStartResolved = null;
+      plannerStartLabel = "";
+      if (!silent) {
+        updatePlannerStartHint("未解析到坐标，请尝试更精确的地址或输入坐标。", "#c0392b");
+      }
+      return null;
+    }
+
+    function findLngLatInText(val) {
+      if (!val) return null;
+      const m = String(val).match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
+      if (!m) return null;
+      return `${parseFloat(m[1])},${parseFloat(m[2])}`;
+    }
+    function isLngLatString(val) {
+      return !!findLngLatInText(val);
+    }
+
+    async function resolveLocationInput(value) {
+      const text = (value || "").trim();
+      if (!text) return null;
+      const embedded = findLngLatInText(text);
+      if (embedded) return embedded;
+      const cityHint = (document.getElementById("poiAgentCity")?.value || document.getElementById("citycode")?.value || document.getElementById("destinationAddress")?.value || "").trim();
+      try {
+        const resp = await postJSON("/geo/guess", { query: text, city: cityHint || undefined });
+        if (resp && resp.status === "1" && resp.location) {
+          return resp.location;
+        }
+      } catch (_) { /* ignore */ }
+      return null;
+    }
+
+    function renderPlannerResult(data) {
+      const box = document.getElementById("plannerResult");
+      if (!box) return;
+      lastItineraryResult = (data && data.status === "1") ? data : null;
+      if (!data || data.status !== "1") {
+        box.innerHTML = `<span style="color:#c0392b;">求解失败：${data?.info || "未知错误"}</span>`;
+        return;
+      }
+      const items = (data.schedule || []).map(step => {
+        return `<div style="padding:6px 0;border-bottom:1px dashed #eee;">
+          <div><b>${step.start} - ${step.end}</b> ｜ ${step.name}</div>
+          ${step.notes ? `<div class="muted small">${step.notes}</div>` : ""}
+        </div>`;
+      }).join("") || "<span class='muted'>暂无排程</span>";
+      const summary = data.summary || {};
+      const tempoText = summary.tempo_label ? ` ｜ 节奏：${summary.tempo_label}` : "";
+      const startLabel = plannerStartLabel || summary.start_location || "起点未设置";
+      const startCoord = summary.start_location && isLngLatString(summary.start_location) ? findLngLatInText(summary.start_location) : "";
+      const startLine = `<div class="small" style="margin-bottom:6px;"><b>出发</b> ${summary.day_start || ""} ｜ ${startLabel}${startCoord ? ` ｜ 坐标 ${startCoord}` : ""}</div>`;
+      const header = `
+        <div class="muted small" style="margin-bottom:6px;">预算：${summary.utilized_budget || 0}${summary.budget_limit ? ` / ${summary.budget_limit}` : ""} 元 ｜ 安排 ${summary.scheduled_count || 0} 项，跳过 ${summary.skipped_count || 0} 项${tempoText}</div>
+        ${startLine}
+      `;
+      const locStops = (data.schedule || []).filter(step => step && step.location);
+      const mapHint = `<div class="muted small" style="margin-bottom:6px;">${locStops.length >= 2 ? `找到 ${locStops.length} 个带坐标的站点，可点击“绘制到地图”自动串联。` : "行程里缺少坐标，补全后可绘制到地图。"}</div>`;
+      const skippedList = (data.skipped || []).map(s => `<div class="muted small">· ${s.name}（${s.reason}）</div>`).join("");
+      box.innerHTML = header + mapHint + items + (skippedList ? `<div style="margin-top:8px;">${skippedList}</div>` : "");
+      if (data.explain && data.explain.length) {
+        data.explain.forEach(text => {
+          addExplanationLog({
+            time: new Date().toLocaleTimeString(),
+            strategy: "行程",
+            text
+          });
+        });
+      }
+    }
+
+    async function onSolveItinerary(silent = false) {
+      let pois = parsePlannerPOIs();
+      if (!pois.length) {
+        if (!silent) alert("请先填写至少一个 POI");
+        return;
+      }
+      pois = await resolveMissingPoiLocations(pois);
+      const day_start = document.getElementById("plannerStart").value || "08:00";
+      const day_end = document.getElementById("plannerEnd").value || "21:00";
+      const startInput = document.getElementById("plannerStartLoc");
+      const startInputRaw = startInput ? startInput.value.trim() : "";
+      let start_location = plannerStartResolved;
+      if (!start_location) {
+        start_location = await resolveLocationInput(startInputRaw);
+        if (start_location) {
+          plannerStartResolved = start_location;
+          updatePlannerStartHint(`已解析起点：${start_location}`, "#2d6cdf");
+          if (startInput && !findLngLatInText(startInputRaw)) {
+            startInput.value = `${startInputRaw} | ${start_location}`;
+          }
+        }
+      }
+      if (!start_location) {
+        const originVal = document.getElementById("origin")?.value.trim();
+        const originCoord = findLngLatInText(originVal);
+        if (originCoord) {
+          start_location = originCoord;
+          plannerStartLabel = "地图起点";
+          updatePlannerStartHint(`已回落至地图起点：${originCoord}`, "#6b7280");
+        }
+      }
+      if (!start_location && startInputRaw) {
+        alert("起点无法解析为坐标，请尝试输入更精确的地点或坐标。");
+        return;
+      }
+      const budget_value = document.getElementById("plannerBudget").value;
+      const avg_speed = Number(document.getElementById("plannerSpeed").value) || 25;
+      const break_range = document.getElementById("plannerBreakRange").value.trim();
+      const break_duration = Number(document.getElementById("plannerBreakDuration").value) || 60;
+      const enforce_order = !!document.getElementById("plannerEnforceOrder")?.checked;
+      const breaks = [];
+      if (break_range && break_range.includes("-")) {
+        const [earliest, latest] = break_range.split("-").map(s => s.trim());
+        breaks.push({ name: "餐饮/休息", earliest, latest, duration: break_duration });
+      }
+      const swap_map = {};
+      Object.keys(plannerState.replacements).forEach(key => {
+        swap_map[key] = plannerState.replacements[key];
+      });
+      const payload = {
+        pois,
+        day_start,
+        day_end,
+        start_location,
+        budget_limit: budget_value ? Number(budget_value) : null,
+        avg_speed_kmh: avg_speed,
+        breaks,
+        locked_pois: plannerState.locked.size ? Array.from(plannerState.locked) : undefined,
+        excluded_pois: plannerState.excluded.size ? Array.from(plannerState.excluded) : undefined,
+        tempo: plannerState.tempo,
+        enforce_order,
+        swap_map: Object.keys(swap_map).length ? swap_map : undefined
+      };
+      const box = document.getElementById("plannerResult");
+      box.innerHTML = silent ? "<span class='muted'>重新排布中…</span>" : "<span class='muted'>求解中…</span>";
+      try {
+        const data = await postJSON("/plan/itinerary", payload);
+        renderPlannerResult(data);
+      } catch (err) {
+        box.innerHTML = `<span style="color:#c0392b;">调用异常：${err}</span>`;
+      }
+    }
+
+    function applyPlanToMap() {
+      if (!lastItineraryResult || !Array.isArray(lastItineraryResult.schedule)) {
+        alert("请先点击“求解行程”，并确保行程结果包含坐标。");
+        return;
+      }
+      const summary = lastItineraryResult.summary || {};
+      const startLoc = summary.start_location && findLngLatInText(summary.start_location);
+      const startName = plannerStartLabel || summary.start_location || "行程起点";
+      const scheduleStops = lastItineraryResult.schedule.filter(item =>
+        item && item.location && typeof item.location === "string" && item.location.includes(",") && item.type !== "travel"
+      );
+      const stops = (startLoc ? [{ location: startLoc, name: startName }] : []).concat(scheduleStops);
+      if (stops.length < 2) {
+        alert("行程缺少带坐标的站点（含起点），无法绘制路线，请在起点或 POI 列表中补充坐标后重试。");
+        return;
+      }
+      onClearMarkers();
+      const originStop = stops[0];
+      const destStop = stops[stops.length - 1];
+      setOrigin(originStop.location, { address: originStop.name || "行程起点", skipReverse: true });
+      clicks = Math.max(clicks, 1);
+      setDestination(destStop.location, { address: destStop.name || "行程终点", skipReverse: true });
+      clicks = Math.max(clicks, 2);
+      const vias = stops.slice(1, -1);
+      vias.forEach((s, idx) => {
+        addWaypoint(s.location);
+        const marker = waypointMarkers[waypointMarkers.length - 1];
+        if (marker) {
+          marker.setLabel({ content: `途经${idx + 1}：${s.name || "行程点"}`, direction: "top" });
+        }
+      });
+      focusOnMarkers();
+      currentMode = "drive";
+      onDrawDriving();
+      const box = document.getElementById("modeWarning");
+      if (box) {
+        box.innerHTML = `<span class="muted">已同步行程到地图并自动绘制驾车路线，可切换步行/骑行重算。</span>`;
+        box.style.color = "#2c3e50";
+      }
+    }
+    // ========= Kimi 聊天（简单版） =========
+    async function onAskKimi(ev) {
+      const btn = ev?.target; setLoading(btn, true);
+      try {
+        const q = document.getElementById("kimiAsk").value.trim();
+        if (!q) { alert("请输入要问 Kimi 的内容"); return; }
+        const hasRouteContext = !!(lastRouteMeta && lastPolylineStrings.length);
+        let endpoint = "/chat/kimi";
+        let payload;
+        if (hasRouteContext) {
+          const scenicSpots = (lastSightsResponse && lastSightsResponse.pois ? lastSightsResponse.pois.slice(0, 8) : []).map(p => ({
+            name: p.name,
+            location: p.location,
+            type: p.type,
+            address: p.address,
+            distance_m: p.distance_m,
+            rating: p.rating,
+            price: p.price,
+            highlight: p.highlight,
+            rank: p.rank,
+            recommended: p.recommended,
+            cityname: p.cityname,
+            adname: p.adname,
+            source: p.source
+          }));
+          endpoint = "/chat/kimi/route";
+          payload = {
+            model: "moonshot-v1-8k",
+            temperature: 0.6,
+            question: q,
+            context: {
+              ...lastRouteMeta,
+              scenic_spots: scenicSpots
+            }
+          };
+        } else {
+          payload = {
+            model: "moonshot-v1-8k",
+            temperature: 0.6,
+            stream: false,
+            messages: [
+              { role: "system", content: "你是一个出行与旅行路线助手，回答要简洁；如有可能给出里程/预估时间/费用对比；结合用户的起点终点与策略说明建议。" },
+              { role: "user", content: q }
+            ]
+          };
+        }
+        const resp = await fetch(`${BASE_URL}${endpoint}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const j = await resp.json();
+        const box = document.getElementById("kimiAns");
+        if (j && j.status === "1") {
+          box.textContent = j.content;
+        } else {
+          box.textContent = "请求失败：" + (j.info || JSON.stringify(j));
+        }
+      } catch (e) {
+        document.getElementById("kimiAns").textContent = "网络异常：" + e;
+      } finally {
+        setLoading(btn, false);
+      }
+    }
+  </script>
+</body>
+
+</html>
