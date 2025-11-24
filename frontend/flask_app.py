@@ -128,5 +128,13 @@ def map_page():
     return render_template("map.html", username=session.get("username"))
 
 
+@app.route("/summary")
+def trip_summary():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+    # 只需要渲染模板，数据由前端从 sessionStorage 获取
+    return render_template("summary.html", username=session.get("username"))
+
+
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <title>行程总结 - 智能出行规划</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #f7f7f7;
+            color: #1f2a37;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            color: #1f2a37;
+        }
+
+        .back-btn {
+            padding: 8px 16px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #64748b;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        }
+
+        .back-btn:hover {
+            background: #f8fafc;
+            color: #334155;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .summary-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.02);
+        }
+
+        .summary-stat {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 24px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 10px;
+            bottom: 10px;
+            width: 2px;
+            background: #e2e8f0;
+            border-radius: 2px;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -24px;
+            top: 6px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            border: 3px solid #cbd5e1;
+            box-sizing: border-box;
+            z-index: 1;
+        }
+
+        .timeline-item.start .timeline-dot {
+            border-color: #2d6cdf;
+        }
+
+        .timeline-item.end .timeline-dot {
+            border-color: #ef4444;
+        }
+
+        .timeline-item.poi .timeline-dot {
+            border-color: #f59e0b;
+        }
+
+        .timeline-content {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #f1f5f9;
+        }
+
+        .time-tag {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            background: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .item-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .item-desc {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>行程总结</h1>
+            <a href="{{ url_for('map_page') }}" class="back-btn">
+                <span>←</span> 返回地图
+            </a>
+        </div>
+
+        <div id="content">
+            <!-- Content will be injected by JS -->
+            <div class="empty-state">正在加载行程数据...</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const rawData = sessionStorage.getItem('lastItineraryResult');
+            const container = document.getElementById('content');
+
+            if (!rawData) {
+                container.innerHTML = `
+          <div class="summary-card empty-state">
+            <p>暂无行程数据，请先在地图页进行排程规划。</p>
+            <a href="{{ url_for('map_page') }}" class="back-btn" style="margin-top:10px;">去规划</a>
+          </div>
+        `;
+                return;
+            }
+
+            try {
+                const data = JSON.parse(rawData);
+                renderSummary(data, container);
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<div class="summary-card empty-state">数据解析失败</div>';
+            }
+        });
+
+        function renderSummary(data, container) {
+            // 简单统计
+            const totalCost = data.total_cost || 0;
+            const totalTime = data.total_time_minutes || 0;
+            const poiCount = data.route ? data.route.filter(x => x.type === 'visit').length : 0;
+
+            let html = `
+        <div class="summary-card">
+          <div class="summary-stat">
+            <div class="stat-item">
+              <span class="stat-label">总耗时</span>
+              <span class="stat-value">${Math.floor(totalTime / 60)}h ${totalTime % 60}m</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">预估花费</span>
+              <span class="stat-value">¥${totalCost}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">打卡地点</span>
+              <span class="stat-value">${poiCount} 个</span>
+            </div>
+          </div>
+          
+          <div class="timeline">
+      `;
+
+            if (data.route && data.route.length > 0) {
+                data.route.forEach((step, index) => {
+                    let typeClass = '';
+                    if (index === 0) typeClass = 'start';
+                    else if (index === data.route.length - 1) typeClass = 'end';
+                    else if (step.type === 'visit') typeClass = 'poi';
+
+                    const timeStr = step.arrival_time ? `${step.arrival_time} - ${step.departure_time}` : step.time_window || '';
+
+                    html += `
+            <div class="timeline-item ${typeClass}">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                ${timeStr ? `<span class="time-tag">${timeStr}</span>` : ''}
+                <div class="item-title">${step.name}</div>
+                <div class="item-desc">
+                  ${step.action_desc || (step.type === 'travel' ? '路途移动' : '游玩/停留')}
+                  ${step.cost ? ` · ¥${step.cost}` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+                });
+            } else {
+                html += '<div class="empty-state">行程为空</div>';
+            }
+
+            html += `
+          </div>
+        </div>
+      `;
+
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+
+</html>
